@@ -27,6 +27,32 @@
             Dashboard
         </a>
 
+        @can('master.view')
+            <a href="{{ route('master.index') }}" @class([
+                'mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition',
+                'bg-primary-600 text-white' => request()->routeIs('master.*'),
+                'text-slate-300 hover:bg-white/10 hover:text-white' => ! request()->routeIs('master.*'),
+            ])>
+                <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 5.5h16v13H4zM8 9h8M8 13h5" />
+                </svg>
+                Master
+            </a>
+        @endcan
+
+        @can('inventory.view')
+            <a href="{{ route('inventory.index') }}" @class([
+                'mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition',
+                'bg-primary-600 text-white' => request()->routeIs('inventory.*'),
+                'text-slate-300 hover:bg-white/10 hover:text-white' => ! request()->routeIs('inventory.*'),
+            ])>
+                <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4 7 8-4 8 4-8 4-8-4Zm0 5 8 4 8-4M4 17l8 4 8-4" />
+                </svg>
+                Persediaan
+            </a>
+        @endcan
+
         @can('settings.view')
             <a href="{{ route('settings.governance') }}" @class([
                 'mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition',
@@ -43,7 +69,7 @@
 
         <div class="mt-7 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modul berikutnya</div>
         <ul class="mt-2 grid gap-1" aria-label="Modul yang belum tersedia">
-            @foreach (['Master', 'Pembelian', 'Inventory', 'Penjualan', 'Promosi', 'Laporan'] as $module)
+            @foreach (['Pembelian', 'Penjualan', 'Promosi', 'Laporan'] as $module)
                 <li class="flex min-h-10 items-center justify-between gap-2 rounded-lg px-3 py-2 text-slate-500" title="Belum tersedia pada M0.1">
                     <span>{{ $module }}</span>
                     <span class="text-[10px] uppercase tracking-wide">Nanti</span>
@@ -53,6 +79,6 @@
     </nav>
 
     <div class="border-t border-white/10 px-5 py-4 text-xs text-slate-500">
-        Fondasi M0.1
+        Fondasi, Master & Persediaan M1.1
     </div>
 </div>

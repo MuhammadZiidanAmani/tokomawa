@@ -65,6 +65,6 @@ class CreateUserCommandTest extends TestCase
 
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('roles', 8);
-        $this->assertDatabaseCount('permissions', 12);
+        $this->assertDatabaseCount('permissions', count((array) config('access.permissions')));
     }
 }

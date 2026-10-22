@@ -2,13 +2,25 @@
 
 namespace App\Providers;
 
+use App\Domain\Catalog\Models\Product;
+use App\Domain\Catalog\Models\ShelfLocation;
+use App\Domain\Inventory\Models\StockAdjustment;
 use App\Domain\Organization\Models\Branch;
 use App\Domain\Organization\Models\Register;
 use App\Domain\Organization\Models\Warehouse;
 use App\Domain\Organization\Support\CurrentBranchContext;
+use App\Domain\Pricing\Models\PriceList;
+use App\Domain\Pricing\Models\TaxRule;
+use App\Domain\Suppliers\Models\Supplier;
 use App\Models\User;
 use App\Policies\BranchPolicy;
+use App\Policies\PriceListPolicy;
+use App\Policies\ProductPolicy;
 use App\Policies\RegisterPolicy;
+use App\Policies\ShelfLocationPolicy;
+use App\Policies\StockAdjustmentPolicy;
+use App\Policies\SupplierPolicy;
+use App\Policies\TaxRulePolicy;
 use App\Policies\WarehousePolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
@@ -40,5 +52,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Branch::class, BranchPolicy::class);
         Gate::policy(Warehouse::class, WarehousePolicy::class);
         Gate::policy(Register::class, RegisterPolicy::class);
+        Gate::policy(Product::class, ProductPolicy::class);
+        Gate::policy(Supplier::class, SupplierPolicy::class);
+        Gate::policy(ShelfLocation::class, ShelfLocationPolicy::class);
+        Gate::policy(PriceList::class, PriceListPolicy::class);
+        Gate::policy(TaxRule::class, TaxRulePolicy::class);
+        Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
     }
 }

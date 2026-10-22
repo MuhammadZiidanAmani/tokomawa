@@ -2,7 +2,7 @@
 
 **Versi rencana:** 1.0  
 **Tanggal:** 22 Oktober 2026  
-**Status:** M0.1 COMPLETED; M0.2 COMPLETED pada MariaDB/InnoDB; M0.3 terkunci menunggu instruksi **LANJUT**  
+**Status:** M0.1, M0.2, dan M0.3 COMPLETED pada MariaDB/InnoDB; M1.1 terkunci menunggu instruksi **LANJUT**
 **Sumber kebenaran:** `ai/retail management/PRD_Retail_Management_System.md`, `ai/retail management/architecture.md`, dan `ai/retail management/design.md`
 
 ## 1. Tujuan dan batas rencana
@@ -86,7 +86,7 @@ Tabel berikut menetapkan istilah kanonis untuk implementasi. Resolusi tidak meng
 | DEC-003 | Stok negatif | **DISETUJUI:** dilarang untuk transaksi operasional normal | Disahkan 22 Oktober 2026 |
 | DEC-004 | Scope operasional | **DISETUJUI:** satu cabang awal, schema multi-cabang-ready; jumlah gudang/register ditetapkan di M0.2 | Disahkan sebagian 22 Oktober 2026 |
 | DEC-005 | Auth/RBAC | **DISETUJUI sebagian:** session auth; keputusan paket RBAC dan MFA privileged dilanjutkan pada milestone governance/hardening | Session auth disahkan 22 Oktober 2026 |
-| DEC-006 | Pajak/pembulatan | Tax rule effective-dated; tarif tidak hardcoded; pembulatan per line dan total disahkan akuntan | Sebelum M0.3/M1.3 |
+| DEC-006 | Pajak/pembulatan | **OPEN:** struktur tax rule effective-dated dan pembulatan configurable telah dibuat tanpa tarif hardcoded; kebijakan per-line/per-total tetap harus disahkan akuntan | Sebelum implementasi perhitungan pajak final di M1.3 |
 | DEC-007 | Approval | Batas nominal per role untuk PO, diskon, void, write-off, return, adjustment | Sebelum M0.2 |
 | DEC-008 | Offline POS | **DISETUJUI:** MVP online-required; koneksi putus mencegah posting dan tidak mengaku sukses | Disahkan 22 Oktober 2026 |
 | DEC-009 | Cetak MVP | Browser print untuk 58/80 mm; print bridge ditunda sampai perangkat tervalidasi | Sebelum M1.5 |
@@ -228,9 +228,11 @@ Alasan urutan:
 
 #### M0.3 — Master pendukung, katalog, supplier, harga dasar, dan pajak
 
+**Status implementasi 22 Oktober 2026:** **COMPLETED**. Empat migration forward-only berjalan pada `retail_development`; suite final 82 test/578 assertion lulus pada `retail_testing`; 16 tabel M0.3 terverifikasi InnoDB; CRUD/inaktivasi, hierarki, unit dan konversi, supplier, lokasi branch-scoped, harga efektif, pajak configurable, RBAC, audit, foreign key, serta unique constraint telah diuji. DEC-006 tetap OPEN untuk kebijakan perhitungan pajak final.
+
 **Tujuan:** membangun master yang dibutuhkan purchasing/inventory tanpa mengizinkan edit stok langsung.
 
-**File/area:** `app/Domain/{Catalog,Suppliers,Pricing}/**`, `app/Livewire/Master/**`, requests, policies, views/components, factories, seeders, tests.
+**File/area:** `app/Domain/{Catalog,Suppliers,Pricing}/**`, `app/Http/{Controllers,Requests}/Master/**`, policies, Blade views/components, factories, migrations, routes, permission config, dan tests.
 
 **Tabel:** `departments`, `categories`, `subcategories`, `brands`, `units`, `products`, `product_barcodes`, `product_units`, `shelf_locations`, `product_locations`, `suppliers`, `supplier_products`, `price_lists`, `product_prices`, `price_change_logs`, `tax_rules`.
 
@@ -416,4 +418,4 @@ Sebuah fitur hanya boleh dinyatakan selesai bila:
 
 ## 11. Titik mulai yang diizinkan berikutnya
 
-M0.2 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development, full suite, audit schema, dan uji dua proses independen untuk nomor dokumen serta idempotency telah berhasil. **STOP:** M0.3 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.
+M0.3 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development, CRUD master, RBAC/branch isolation, audit, schema constraints, presisi desimal, full regression suite, Blade compile, Pint, dan frontend build telah berhasil. DEC-006 tetap OPEN dan tidak ada tarif PPN yang di-hardcode. **STOP:** M1.1 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.

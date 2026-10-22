@@ -70,6 +70,6 @@ class PermissionMatrixTest extends TestCase
         $this->seed();
 
         $this->assertSame(8, Role::query()->count());
-        $this->assertSame(12, Permission::query()->count());
+        $this->assertSame(count((array) config('access.permissions')), Permission::query()->count());
     }
 }

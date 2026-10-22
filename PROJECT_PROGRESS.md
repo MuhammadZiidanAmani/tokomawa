@@ -1,9 +1,9 @@
 # Project Progress — Retail Management System
 
 **Tanggal pembaruan:** 22 Oktober 2026  
-**Tahap aktif:** M0.2 — COMPLETED; berhenti sebelum M0.3  
-**Status implementasi aplikasi:** M0.2 COMPLETED pada MariaDB 11.8.8/InnoDB; migration, full suite, schema audit, dan concurrency dua proses lulus  
-**Gate:** M0.3 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
+**Tahap aktif:** M0.3 — COMPLETED; berhenti sebelum M1.1
+**Status implementasi aplikasi:** M0.3 COMPLETED pada MariaDB 11.8.8/InnoDB; migration, CRUD master, RBAC, audit, regression suite, schema audit, Pint, Blade compile, dan frontend build lulus
+**Gate:** M1.1 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
 
 ## 1. Ringkasan status
 
@@ -18,9 +18,10 @@
 | Implementation plan | Selesai | Fase F0–F4, milestone, dependensi, tabel/file, acceptance criteria, dan safe transaction order disusun. |
 | Implementasi M0.1 | **COMPLETED** | Session auth, modular foundation, Livewire dashboard, design system, user command, audit regresi, dan quality gate telah lulus. |
 | Implementasi M0.2 | **COMPLETED** | Delapan migration development, 59 test/325 assertion, audit 24 tabel InnoDB, dan concurrency dua proses untuk sequence/idempotency lulus pada MariaDB. |
-| Implementasi modul bisnis | Belum dimulai | Master, purchasing, inventory, POS, keuangan, dan laporan tetap di luar scope M0.2. |
+| Implementasi M0.3 | **COMPLETED** | Master katalog, supplier, unit/konversi, lokasi, harga efektif, dan pajak configurable telah berjalan; 82 test/578 assertion lulus. |
+| Implementasi transaksi bisnis | Belum dimulai | Inventory ledger, purchasing, POS, keuangan, dan laporan tetap terkunci di milestone berikutnya. |
 
-**Interpretasi progres:** planning baseline, M0.1, dan M0.2 selesai. Fondasi organisasi, akses, audit, approval, idempotency, dan nomor dokumen telah tervalidasi pada MariaDB/InnoDB. Seluruh modul bisnis tetap belum dimulai dan M0.3 menunggu instruksi pengguna.
+**Interpretasi progres:** planning baseline serta M0.1–M0.3 selesai. Fondasi organisasi/reliabilitas dan master data retail telah tervalidasi pada MariaDB/InnoDB. Tidak ada modul stok, purchasing, POS, atau keuangan yang dimulai; M1.1 menunggu instruksi pengguna.
 
 ## 2. Baseline lingkungan yang terverifikasi
 
@@ -85,8 +86,15 @@
 | Audit schema MariaDB | Lulus — development dan testing masing-masing 24/24 tabel InnoDB, 25 foreign key, 17 unique constraint; unique scope sequence/idempotency terverifikasi |
 | Focused transaction/concurrency gate | Lulus — 10 test, 41 assertion; dua proses sequence menghasilkan 50 nomor unik dan idempotency menjalankan side effect tepat sekali |
 | Full PHPUnit suite MariaDB | Lulus — 59 test, 325 assertion, 0 failure pada `retail_testing` |
+| Migration M0.3 development | Lulus — 4 migration forward-only batch 2 `Ran` pada `retail_development`; tidak ada reset, rollback, drop, atau penghapusan data |
+| Audit schema M0.3 | Lulus — 16/16 tabel M0.3 memakai InnoDB; unique index, FK `RESTRICT`, serta presisi DECIMAL diverifikasi pada `retail_testing` |
+| Targeted master data suite | Lulus — 19 test, 116 assertion untuk barang, hierarki, unit, supplier, lokasi, harga, pajak, RBAC, branch isolation, dan audit |
+| Schema integration suite M0.3 | Lulus — 4 test, 49 assertion langsung terhadap `information_schema` MariaDB testing |
+| Full regression suite setelah M0.3 | Lulus — 82 test, 578 assertion, 0 failure pada `retail_testing` |
+| Regression concurrency M0.2 setelah M0.3 | Lulus — 2 test, 23 assertion; dua proses independen untuk sequence dan idempotency tetap aman |
+| Quality gate M0.3 | Lulus — Laravel Pint, Blade cache, 36 route master, dan Vite/Tailwind production build |
 
-Catatan: kelulusan test membuktikan acceptance M0.1, bukan modul bisnis retail.
+Catatan: bukti terbaru membuktikan acceptance M0.1, M0.2, dan M0.3; belum membuktikan modul transaksi M1.x.
 
 ## 5. Artefak yang dibuat/diubah pada tahap awal
 
@@ -110,6 +118,14 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 - Frontend: Livewire dashboard, guest/app layouts, sidebar/topbar, dan komponen button/input/card/table/modal/badge/alert.
 - Tooling: repository Git, Livewire Composer dependency, dependency frontend, dan npm lockfile.
 - Tests: authentication, rate limiting, inactive user, logout, protected dashboard, user command, formatter IDR/WIB, health, dan Livewire dashboard.
+
+### Implementasi M0.3
+
+- Domain/backend: model, enum, factory, service transaction, policy, Form Request, dan controller pada `app/Domain/{Catalog,Suppliers,Pricing}/**`, `app/Policies/**`, dan `app/Http/**/Master/**`.
+- Database: empat migration forward-only untuk 16 tabel master katalog, supplier, lokasi, harga, riwayat harga, dan aturan pajak.
+- Frontend: halaman Barang, Departemen/Kategori/Subkategori/Merek, Satuan, Supplier dan relasi barang, Rak/Lokasi, Strata Harga, serta Konfigurasi Pajak; sidebar dan komponen textarea diperbarui.
+- Security/reliability: 11 permission M0.3 ditambahkan ke matriks 8 role; mutasi multi-tabel memakai transaction, row lock pada record utama, FK/unique constraint, audit trail, branch scope, dan inaktivasi sebagai pengganti hard delete.
+- Tests: HTTP CRUD/inaktivasi, hierarchy integrity, SKU/barcode uniqueness, unit conversion, decimal precision, supplier relation, branch isolation, RBAC, effective-period conflict, tax configuration, audit log, FK, serta direct `information_schema` audit.
 
 ## 6. Register keputusan
 
@@ -135,8 +151,8 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 | Planning baseline | **Selesai** | Tiga dokumen dibaca, proyek diaudit, dua dokumen perencanaan dibuat. |
 | M0.1 Baseline teknis, modular structure, auth, design system | **COMPLETED** | Audit final: 21 test/86 assertion lulus, build lulus, migration additive ran, auth/UI berfungsi. |
 | M0.2 Organization, RBAC, approval, audit, idempotency, sequence | **COMPLETED** | Migration/full suite/schema audit/concurrency lulus pada MariaDB/InnoDB; bukti final tercatat pada bagian 16. |
-| M0.3 Master/catalog/supplier/pricing/tax | Belum dimulai | Bergantung M0.2. |
-| M1.1 Stock ledger, balance, costing | **Belum dimulai** | DEC-002/003 sudah disahkan; masih bergantung pada M0.2 dan M0.3. |
+| M0.3 Master/catalog/supplier/pricing/tax | **COMPLETED** | Empat migration development `Ran`; 82 test/578 assertion, schema audit, Pint, Blade compile, dan frontend build lulus. |
+| M1.1 Stock ledger, balance, costing | **Belum dimulai** | Dependency M0.3 sudah terpenuhi, tetapi tetap terkunci sampai instruksi eksplisit **LANJUT**. |
 | M1.2 Purchase Order | Belum dimulai | Bergantung fondasi/master. |
 | M1.3 Goods receipt | Belum dimulai | Bergantung PO dan stock ledger. |
 | M1.4 Purchase invoice/AP minimum | Belum dimulai | Bergantung receipt. |
@@ -153,7 +169,7 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 3. Pengguna pertama belum dibuat pada database development karena password tidak boleh dibuat atau di-hardcode oleh agent.
 4. `SESSION_SECURE_COOKIE=false` diperlukan untuk HTTP lokal; production HTTPS wajib mengaturnya menjadi `true`.
 5. Build memberi warning opsional `fontaine` untuk optimized font fallback, tetapi build berhasil dan aset Inter terbentuk.
-6. MFA privileged, jumlah gudang/register operasional, PPN, rounding, nominal approval bisnis, perangkat, dan volume masih perlu diputuskan pada milestone terkait. Struktur RBAC dan konfigurasi approval limit sudah tersedia tanpa nominal hardcoded.
+6. MFA privileged, jumlah gudang/register operasional, kebijakan final PPN/rounding, nominal approval bisnis, perangkat, dan volume masih perlu diputuskan pada milestone terkait. Struktur pajak effective-dated sudah tersedia tanpa tarif hardcoded; DEC-006 tetap OPEN.
 7. Repository Git sudah diinisialisasi, tetapi baseline proyek belum memiliki commit dan seluruh file masih berstatus untracked; pembuatan commit tetap menjadi keputusan pengguna dan bukan blocker acceptance M0.1.
 
 ## 9. Protokol pembaruan milestone
@@ -176,7 +192,7 @@ Next gate: STOP — menunggu LANJUT
 
 ## 10. Aksi berikutnya
 
-STOP setelah M0.2 COMPLETED. Jangan memulai M0.3 sebelum pengguna memberikan instruksi eksplisit **LANJUT**.
+STOP setelah M0.3 COMPLETED. Jangan memulai M1.1 sebelum pengguna memberikan instruksi eksplisit **LANJUT**.
 
 ## 11. Audit pembukaan M1.1 — 22 Oktober 2026
 
@@ -431,3 +447,66 @@ STOP setelah M0.2 COMPLETED. Jangan memulai M0.3 sebelum pengguna memberikan ins
 - [x] Full PHPUnit suite lulus pada MariaDB testing.
 
 **Next gate:** STOP — M0.2 COMPLETED. Jangan memulai M0.3 sebelum instruksi eksplisit **LANJUT** dari pengguna.
+
+## 17. M0.3 — Master pendukung, katalog, supplier, harga dasar, dan pajak — 22 Oktober 2026
+
+**Status:** COMPLETED — seluruh acceptance criteria M0.3 lulus pada MariaDB/InnoDB.
+
+**Fitur yang berfungsi:**
+
+- Barang dengan SKU unik, barcode utama/alternatif, klasifikasi, hierarki kategori, merek, satuan dasar/beli/jual, konversi presisi, supplier utama, konfigurasi pajak, deskripsi, status aktif, pencarian, filter, pagination, detail, dan edit.
+- Departemen, kategori, subkategori, merek, dan satuan dengan validasi parent-child, kode scoped, inaktivasi, serta FK `RESTRICT` untuk mencegah penghapusan referensi yang telah digunakan.
+- Supplier beserta data administratif, supplier SKU, harga beli/kontrak presisi, minimum order, lead time, prioritas, dan relasi supplier utama per barang.
+- Rak/lokasi scoped ke cabang dan gudang aktif, penempatan barang, rak utama per cabang, serta respons 404 untuk akses record lintas cabang.
+- Strata harga dan harga barang per satuan/minimum kuantitas dengan periode efektif, prioritas, currency IDR, validasi overlap, serta immutable `price_change_logs`.
+- Aturan pajak effective-dated dengan tarif, mode inclusive/exclusive/exempt, rounding mode, dan scale yang dapat dikonfigurasi. Tidak ada tarif PPN hardcoded dan DEC-006 tetap OPEN untuk kebijakan perhitungan final.
+- Seluruh mutasi master penting memakai server-side Form Request, Gate/Policy, transaction dengan bounded retry, row locking saat update penting, audit log, dan status inaktif sebagai jalur aman pengganti hard delete.
+
+**Migration dan tabel:**
+
+- `2026_10_22_073707_create_m0_3_01_reference_and_tax_tables` — `departments`, `categories`, `subcategories`, `brands`, `units`, `tax_rules`, `price_lists`.
+- `2026_10_22_073708_create_m0_3_02_catalog_and_supplier_tables` — `suppliers`, `products`, `product_barcodes`, `product_units`, `supplier_products`.
+- `2026_10_22_073709_create_m0_3_03_location_tables` — `shelf_locations`, `product_locations`.
+- `2026_10_22_073710_create_m0_3_04_pricing_tables` — `product_prices`, `price_change_logs`.
+- Keempat migration dijalankan forward-only sebagai batch 2 pada `retail_development`; seluruh 12 migration proyek berstatus `Ran`.
+- Audit development membuktikan 16/16 tabel M0.3 memakai InnoDB. Setelah migration/seeder idempoten: 23 permission, 8 role, 0 user, dan 0 cabang; tidak ada data development lama yang dihapus atau di-reset.
+- Nilai uang menggunakan `DECIMAL(18,2)`, kuantitas `DECIMAL(18,3)`, faktor konversi `DECIMAL(18,6)`, dan tarif pajak `DECIMAL(7,4)`; tidak ada kolom float untuk domain tersebut.
+
+**File/area utama:**
+
+- Domain: `app/Domain/Catalog/**`, `app/Domain/Suppliers/**`, dan `app/Domain/Pricing/**`.
+- HTTP/security: `app/Http/Controllers/Master/**`, `app/Http/Requests/Master/**`, policies M0.3, provider, routes, dan `config/access.php`.
+- UI: `resources/views/master/**`, `resources/views/components/ui/textarea.blade.php`, dan navigasi sidebar.
+- Data/test: migration/factory M0.3, permission seeder idempoten, test controller master, schema integration test, serta penyesuaian regression test permission count agar mengikuti konfigurasi.
+
+**Pengujian dan quality gate:**
+
+- Targeted HTTP master suite final: 19 test, 116 assertion — PASSED.
+- Direct MariaDB schema suite: 4 test, 49 assertion — PASSED; memastikan target `retail_testing`, 16 tabel InnoDB, unique indexes, FK `RESTRICT`, dan presisi DECIMAL.
+- Full regression suite final: 82 test, 578 assertion, 0 failure — PASSED pada `retail_testing`.
+- Regression concurrency M0.2 terarah: 2 test, 23 assertion — PASSED; dua proses independen untuk document sequence dan idempotency tidak menghasilkan nomor duplikat atau side effect ganda.
+- Laravel Pint `--dirty --format agent` — PASSED.
+- `php artisan view:cache` — PASSED; 36 route master terdaftar.
+- `npm run build` — PASSED dengan Vite 8.3.5 dan Tailwind CSS 4; warning `fontaine` bersifat opsional dan tidak menggagalkan build.
+
+**Perbaikan selama audit:**
+
+1. Residu scaffold pada `ProductControllerTest` dibersihkan sebelum suite dijalankan.
+2. Regression test M0.2 yang masih mengasumsikan 12 permission diubah agar mengikuti jumlah permission pada `config/access.php`; matriks aktual berisi 23 permission dan seeder tetap idempoten.
+3. Coverage update/inaktivasi ditambahkan untuk barang, satuan, supplier, rak, strata harga, dan aturan pajak agar klaim CRUD tidak hanya bergantung pada route atau implementasi statis.
+4. Audit skema otomatis ditambahkan untuk mencegah regresi engine, constraint, dan presisi database target.
+
+**Acceptance criteria final:**
+
+- [x] Seluruh scope M0.3 pada implementation plan diimplementasikan tanpa memulai inventory, purchasing, POS, atau keuangan.
+- [x] CRUD melalui aplikasi berfungsi untuk master penting; hard delete sengaja tidak diekspos dan diganti inaktivasi.
+- [x] Data tersimpan pada MariaDB; migration development forward-only berhasil tanpa reset/drop.
+- [x] RBAC dan branch isolation lulus HTTP test, termasuk penolakan lintas cabang dengan 404.
+- [x] Harga, kuantitas, faktor konversi, dan pajak memakai DECIMAL dan diuji tanpa float.
+- [x] Foreign key, unique constraint, index, dan InnoDB diverifikasi melalui `information_schema`.
+- [x] Audit perubahan master penting, harga, dan pajak tersimpan.
+- [x] Seluruh automated test dan regression suite lulus pada `retail_testing`.
+- [x] UI responsif berbahasa Indonesia, memakai design system, dan frontend build berhasil.
+- [x] Tidak ada blocker kritis tersembunyi; DEC-006 tetap dinyatakan OPEN dan tidak diklaim final.
+
+**Next gate:** STOP — M0.3 COMPLETED. Jangan memulai M1.1 sebelum instruksi eksplisit **LANJUT** dari pengguna.

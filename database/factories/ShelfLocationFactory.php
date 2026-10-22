@@ -14,6 +14,18 @@ class ShelfLocationFactory extends Factory
 {
     protected $model = ShelfLocation::class;
 
+    public function configure(): static
+    {
+        return $this->afterMaking(function (ShelfLocation $location): void {
+            $branch = $location->branch_id === null
+                ? Branch::factory()->create()
+                : Branch::query()->findOrFail($location->branch_id);
+
+            $location->branch_id = $branch->getKey();
+            $location->warehouse_id ??= Warehouse::factory()->for($branch)->create()->getKey();
+        });
+    }
+
     /**
      * Define the model's default state.
      *
@@ -21,11 +33,9 @@ class ShelfLocationFactory extends Factory
      */
     public function definition(): array
     {
-        $branch = Branch::factory();
-
         return [
-            'branch_id' => $branch,
-            'warehouse_id' => Warehouse::factory()->for($branch),
+            'branch_id' => null,
+            'warehouse_id' => null,
             'code' => fake()->unique()->bothify('RAK-##??'),
             'name' => 'Rak '.fake()->word(),
             'zone' => fake()->optional()->randomLetter(),
