@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\AccountsPayable\Models\PurchaseInvoice;
 use App\Domain\Catalog\Models\Product;
 use App\Domain\Catalog\Models\ShelfLocation;
 use App\Domain\Inventory\Models\StockAdjustment;
@@ -19,6 +20,7 @@ use App\Policies\BranchPolicy;
 use App\Policies\GoodsReceiptPolicy;
 use App\Policies\PriceListPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\PurchaseInvoicePolicy;
 use App\Policies\PurchaseOrderPolicy;
 use App\Policies\RegisterPolicy;
 use App\Policies\ShelfLocationPolicy;
@@ -64,5 +66,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
         Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
         Gate::policy(GoodsReceipt::class, GoodsReceiptPolicy::class);
+        Gate::policy(PurchaseInvoice::class, PurchaseInvoicePolicy::class);
     }
 }

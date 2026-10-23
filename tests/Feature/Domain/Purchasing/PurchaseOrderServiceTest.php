@@ -66,8 +66,8 @@ class PurchaseOrderServiceTest extends TestCase
         $this->assertStringStartsWith('PO/2026/10/', $purchaseOrder->document_number);
         $this->assertDatabaseCount('inventory_movements', 0);
         $this->assertDatabaseCount('inventory_balances', 0);
-        $this->assertFalse(Schema::hasTable('ap_entries'));
-        $this->assertFalse(Schema::hasTable('purchase_invoices'));
+        $this->assertDatabaseCount('ap_entries', 0);
+        $this->assertDatabaseCount('purchase_invoices', 0);
         $this->assertFalse(Schema::hasTable('supplier_payments'));
         $this->assertDatabaseHas('audit_logs', ['action' => 'purchase_order.created', 'entity_id' => $purchaseOrder->public_id]);
     }

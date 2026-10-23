@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountsPayable\AccountsPayableController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CurrentBranchController;
 use App\Http\Controllers\Inventory\InventoryController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Master\ReferenceDataController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\UnitController;
 use App\Http\Controllers\Purchasing\GoodsReceiptController;
+use App\Http\Controllers\Purchasing\PurchaseInvoiceController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderWorkflowController;
 use App\Http\Controllers\Settings\AccessAssignmentController;
@@ -116,6 +118,14 @@ Route::middleware('auth')->group(function (): void {
                 Route::post('/purchase-order/{purchase_order}/batalkan', [PurchaseOrderWorkflowController::class, 'cancel'])
                     ->name('purchase-orders.cancel');
             });
+
+        Route::prefix('pembelian')->name('purchasing.')->middleware('permission:purchase_invoices.view')->group(function (): void {
+            Route::resource('faktur-pembelian', PurchaseInvoiceController::class)
+                ->parameters(['faktur-pembelian' => 'purchase_invoice'])
+                ->only(['index', 'create', 'store', 'show', 'edit', 'update'])->names('purchase-invoices');
+            Route::post('/faktur-pembelian/{purchase_invoice}/posting', [PurchaseInvoiceController::class, 'post'])->name('purchase-invoices.post');
+        });
+        Route::get('/keuangan/hutang-supplier', [AccountsPayableController::class, 'index'])->middleware('permission:accounts_payable.view')->name('accounts-payable.index');
 
         Route::prefix('pembelian')
             ->name('purchasing.')

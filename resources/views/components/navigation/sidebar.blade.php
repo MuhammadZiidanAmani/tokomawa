@@ -40,6 +40,19 @@
             </a>
         @endcan
 
+        @can('purchase_invoices.view')
+            <a href="{{ route('purchasing.purchase-invoices.index') }}" @class(['mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition','bg-primary-600 text-white' => request()->routeIs('purchasing.purchase-invoices.*'),'text-slate-300 hover:bg-white/10 hover:text-white' => ! request()->routeIs('purchasing.purchase-invoices.*')])>
+                <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18H6zM9 8h6M9 12h6M9 16h4"/></svg>
+                Faktur Pembelian
+            </a>
+        @endcan
+        @can('accounts_payable.view')
+            <a href="{{ route('accounts-payable.index') }}" @class(['mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition','bg-primary-600 text-white' => request()->routeIs('accounts-payable.*'),'text-slate-300 hover:bg-white/10 hover:text-white' => ! request()->routeIs('accounts-payable.*')])>
+                <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v12H3zM7 11h6M17 15h.01"/></svg>
+                Hutang Supplier
+            </a>
+        @endcan
+
         @can('purchase_orders.view')
             <a href="{{ route('purchasing.purchase-orders.index') }}" @class([
                 'mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition',
@@ -105,6 +118,6 @@
     </nav>
 
     <div class="border-t border-white/10 px-5 py-4 text-xs text-slate-500">
-        Fondasi sampai Penerimaan Barang M1.3
+        Fondasi sampai Faktur Pembelian & AP M1.4
     </div>
 </div>

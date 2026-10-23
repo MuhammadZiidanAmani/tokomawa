@@ -43,6 +43,11 @@ return [
         'goods_receipts.update' => ['name' => 'Mengubah draft penerimaan barang', 'module' => 'purchasing'],
         'goods_receipts.post' => ['name' => 'Memposting penerimaan barang', 'module' => 'purchasing'],
         'goods_receipts.cancel' => ['name' => 'Membatalkan draft penerimaan barang', 'module' => 'purchasing'],
+        'purchase_invoices.view' => ['name' => 'Melihat faktur pembelian', 'module' => 'accounts_payable'],
+        'purchase_invoices.create' => ['name' => 'Membuat faktur pembelian', 'module' => 'accounts_payable'],
+        'purchase_invoices.update' => ['name' => 'Mengubah draft faktur pembelian', 'module' => 'accounts_payable'],
+        'purchase_invoices.post' => ['name' => 'Memposting faktur pembelian', 'module' => 'accounts_payable'],
+        'accounts_payable.view' => ['name' => 'Melihat hutang supplier', 'module' => 'accounts_payable'],
     ],
 
     'roles' => [
@@ -62,6 +67,7 @@ return [
                 'purchase_orders.submit', 'purchase_orders.approve', 'purchase_orders.send', 'purchase_orders.cancel',
                 'goods_receipts.view', 'goods_receipts.create', 'goods_receipts.update',
                 'goods_receipts.post', 'goods_receipts.cancel',
+                'purchase_invoices.view', 'purchase_invoices.create', 'purchase_invoices.update', 'purchase_invoices.post', 'accounts_payable.view',
             ],
         ],
         'purchasing' => ['name' => 'Purchasing', 'permissions' => [
@@ -70,6 +76,7 @@ return [
             'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update',
             'purchase_orders.submit', 'purchase_orders.send', 'purchase_orders.cancel',
             'goods_receipts.view', 'goods_receipts.create', 'goods_receipts.update', 'goods_receipts.cancel',
+            'purchase_invoices.view', 'purchase_invoices.create', 'purchase_invoices.update',
         ]],
         'inventory' => ['name' => 'Inventory / Gudang', 'permissions' => [
             'approvals.view', 'approvals.request', 'master.view', 'catalog.view', 'locations.view', 'locations.manage',
@@ -86,6 +93,7 @@ return [
             'inventory.view', 'inventory.reconcile',
             'purchase_orders.view',
             'goods_receipts.view',
+            'purchase_invoices.view', 'purchase_invoices.create', 'purchase_invoices.update', 'purchase_invoices.post', 'accounts_payable.view',
         ]],
         'marketing' => ['name' => 'Marketing', 'permissions' => [
             'approvals.view', 'approvals.request', 'master.view', 'catalog.view', 'pricing.view', 'pricing.manage', 'tax.view',

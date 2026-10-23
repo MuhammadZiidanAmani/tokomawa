@@ -2,7 +2,7 @@
 
 **Versi rencana:** 1.0  
 **Tanggal:** 23 Oktober 2026
-**Status:** M0.1, M0.2, M0.3, M1.1, dan M1.2 COMPLETED pada MariaDB/InnoDB; M1.3 Goods Receipt **IN_PROGRESS**
+**Status:** M0.1, M0.2, M0.3, M1.1, M1.2, dan M1.3 COMPLETED pada MariaDB/InnoDB; M1.4 terkunci menunggu instruksi **LANJUT**
 **Sumber kebenaran:** `ai/retail management/PRD_Retail_Management_System.md`, `ai/retail management/architecture.md`, dan `ai/retail management/design.md`
 
 ## 1. Tujuan dan batas rencana
@@ -291,7 +291,7 @@ Alasan urutan:
 
 #### M1.3 — Goods receipt parsial dari PO
 
-**Status implementasi 23 Oktober 2026:** **IN_PROGRESS** setelah instruksi eksplisit **LANJUT M1.3**. Dependency M1.1 dan M1.2 telah diverifikasi. Rencana perubahan dibatasi pada dua tabel Goods Receipt, domain service posting melalui `InventoryPostingService`, policy/Form Request/controller, UI receiving, factory, serta integration/schema/concurrency test. Tidak ada Purchase Invoice, AP, pembayaran, retur supplier, atau POS yang dibuat.
+**Status implementasi 23 Oktober 2026:** **COMPLETED**. Dua tabel Goods Receipt dan seluruh alur draft, penerimaan parsial/penuh, pembatalan draft, serta posting stok atomik melalui `InventoryPostingService` telah diimplementasikan. Posting memakai idempotency, stable-order row locking, unique source constraint, audit/outbox, batch/lot/expiry validation, dan memperbarui outstanding PO bersama movement serta balance dalam satu transaction. Over-receipt ditolak selama DEC-014 masih OPEN. Targeted suite lulus 12 test/117 assertion, concurrency dua proses independen lulus, dan full regression suite lulus 134 test/1.109 assertion pada MariaDB `retail_testing`; Pint, Blade compile, route audit, schema audit, dan frontend build juga lulus. Setelah dry-run dan persetujuan eksplisit pengguna, migration development berjalan forward-only sebagai batch 5 pada `retail_development`; seluruh 15 migration berstatus `Ran`, kedua tabel baru InnoDB, dan data akun/organisasi/PO/inventory tetap tidak berubah. Tidak ada Purchase Invoice, AP, pembayaran, retur supplier, atau POS yang dibuat.
 
 **Tujuan:** menerima barang tepat sekali dan menjaga outstanding PO.
 
@@ -426,4 +426,4 @@ Sebuah fitur hanya boleh dinyatakan selesai bila:
 
 ## 11. Titik mulai yang diizinkan berikutnya
 
-M1.2 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development forward-only, nomor PO transaction-safe, draft dan snapshot historis, lifecycle approval dengan separation of duties, branch isolation/RBAC, audit/outbox, rollback/idempotency, concurrency dua proses, full regression suite, Blade compile, Pint, dan frontend build telah berhasil tanpa mutasi inventory atau AP. DEC-007 dan DEC-013 tetap OPEN untuk nominal approval dan kewajiban mapping barang-supplier. **STOP:** M1.3 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.
+M1.3 telah lulus pada MariaDB/InnoDB. Draft Goods Receipt, posting inventory atomik, penerimaan parsial/penuh, outstanding PO, batch/lot/expiry, branch dan warehouse scope, RBAC, audit/outbox, rollback/idempotency, serta concurrency dua proses telah tervalidasi pada `retail_testing`. Migration development telah berjalan forward-only sebagai batch 5 pada `retail_development`; kedua tabel Goods Receipt InnoDB dan seluruh data lama tetap utuh. DEC-014 tetap OPEN dan default aman menolak over-receipt. **STOP:** M1.4 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.

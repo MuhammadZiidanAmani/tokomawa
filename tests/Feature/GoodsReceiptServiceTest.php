@@ -53,8 +53,8 @@ class GoodsReceiptServiceTest extends TestCase
         $this->assertSame(PurchaseOrderStatus::Completed, $purchaseOrder->fresh()->status);
         $this->assertSame('10.000', InventoryBalance::query()->sole()->qty_on_hand);
         $this->assertSame(2, InventoryMovement::query()->count());
-        $this->assertFalse(Schema::hasTable('purchase_invoices'));
-        $this->assertFalse(Schema::hasTable('ap_entries'));
+        $this->assertDatabaseCount('purchase_invoices', 0);
+        $this->assertDatabaseCount('ap_entries', 0);
         $this->assertFalse(Schema::hasTable('supplier_payments'));
     }
 
