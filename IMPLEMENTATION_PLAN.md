@@ -2,7 +2,7 @@
 
 **Versi rencana:** 1.0  
 **Tanggal:** 23 Oktober 2026
-**Status:** M0.1, M0.2, M0.3, dan M1.1 COMPLETED pada MariaDB/InnoDB; M1.2 terkunci menunggu instruksi **LANJUT**
+**Status:** M0.1, M0.2, M0.3, M1.1, dan M1.2 COMPLETED pada MariaDB/InnoDB; M1.3 Goods Receipt **IN_PROGRESS**
 **Sumber kebenaran:** `ai/retail management/PRD_Retail_Management_System.md`, `ai/retail management/architecture.md`, dan `ai/retail management/design.md`
 
 ## 1. Tujuan dan batas rencana
@@ -87,12 +87,14 @@ Tabel berikut menetapkan istilah kanonis untuk implementasi. Resolusi tidak meng
 | DEC-004 | Scope operasional | **DISETUJUI:** satu cabang awal, schema multi-cabang-ready; jumlah gudang/register ditetapkan di M0.2 | Disahkan sebagian 22 Oktober 2026 |
 | DEC-005 | Auth/RBAC | **DISETUJUI sebagian:** session auth; keputusan paket RBAC dan MFA privileged dilanjutkan pada milestone governance/hardening | Session auth disahkan 22 Oktober 2026 |
 | DEC-006 | Pajak/pembulatan | **OPEN:** struktur tax rule effective-dated dan pembulatan configurable telah dibuat tanpa tarif hardcoded; kebijakan per-line/per-total tetap harus disahkan akuntan | Sebelum implementasi perhitungan pajak final di M1.3 |
-| DEC-007 | Approval | Batas nominal per role untuk PO, diskon, void, write-off, return, adjustment | Sebelum M0.2 |
+| DEC-007 | Approval | **OPEN untuk nominal bisnis:** struktur limit per cabang/role/permission aktif; PO memakai total dokumen dan menolak approval bila limit yang sesuai belum dikonfigurasi | Sebelum penggunaan operasional tiap tipe approval |
 | DEC-008 | Offline POS | **DISETUJUI:** MVP online-required; koneksi putus mencegah posting dan tidak mengaku sukses | Disahkan 22 Oktober 2026 |
 | DEC-009 | Cetak MVP | Browser print untuk 58/80 mm; print bridge ditunda sampai perangkat tervalidasi | Sebelum M1.5 |
 | DEC-010 | Noncash | F1 cash-only; provider QRIS/EDC dan callback dipilih sebelum M2.7 | Sebelum M2.7 |
 | DEC-011 | Konsinyasi | Settlement sold-through atau jadwal kontrak | Sebelum M2.6 |
 | DEC-012 | Perangkat/volume | SKU, transaksi/hari, kasir simultan, scanner/printer/OS | Sebelum performance/device acceptance |
+| DEC-013 | Kewajiban relasi barang-supplier pada PO | **OPEN:** default aman tidak mewajibkan mapping; bila konfigurasi diaktifkan, item tanpa relasi supplier aktif ditolak | Sebelum penerapan kebijakan procurement ketat |
+| DEC-014 | Toleransi over-receipt | **OPEN:** M1.3 menolak penerimaan di atas outstanding; toleransi/approval baru boleh ditambahkan setelah kebijakan procurement disahkan | Sebelum over-receipt diizinkan |
 
 Keputusan yang belum disahkan dicatat sebagai `OPEN`, bukan diasumsikan selesai. Rekomendasi boleh dipakai untuk desain awal hanya bila pengguna menyetujuinya pada pembukaan milestone.
 
@@ -279,13 +281,17 @@ Alasan urutan:
 
 **Tabel:** `purchase_orders`, `purchase_order_items`.
 
-**File/area:** `app/Domain/Purchasing/**`, `app/Livewire/Purchasing/{PoIndex,PoForm,PoShow}`, requests, policies, views, tests.
+**File/area:** `app/Domain/Purchasing/**`, controller/Form Request purchasing, policy, Blade views responsif, routes, factories, dan tests.
 
 **Dependensi:** M0.2 dan M0.3.
 
 **Acceptance criteria:** nomor PO unik/transaction-safe; state machine dan approval valid; snapshot supplier/harga tersimpan; PO draft dapat diedit, approved tidak diedit langsung; PO tidak membuat movement atau AP entry.
 
+**Status implementasi 23 Oktober 2026:** **COMPLETED**. Migration dua tabel PO berjalan forward-only sebagai batch 4 pada `retail_development`; kedua tabel InnoDB dengan 13 foreign key dan 7 unique index. Draft multi-item, snapshot supplier/produk/satuan/konversi/harga, perhitungan BCMath, lifecycle draft → pending approval → approved/rejected → sent/cancelled, approval limit, larangan self-approval, RBAC, branch isolation, audit/outbox, idempotency, dan preparation field outstanding telah diterapkan tanpa efek inventory atau AP. Targeted M1.2 lulus 21 test/136 assertion termasuk nomor PO dua proses independen; full regression suite lulus 122 test/952 assertion pada `retail_testing`. Pint, Blade compile, 11 route purchasing, dan Vite/Tailwind build lulus. DEC-007 dan DEC-013 tetap OPEN pada bagian kebijakan bisnisnya.
+
 #### M1.3 — Goods receipt parsial dari PO
+
+**Status implementasi 23 Oktober 2026:** **IN_PROGRESS** setelah instruksi eksplisit **LANJUT M1.3**. Dependency M1.1 dan M1.2 telah diverifikasi. Rencana perubahan dibatasi pada dua tabel Goods Receipt, domain service posting melalui `InventoryPostingService`, policy/Form Request/controller, UI receiving, factory, serta integration/schema/concurrency test. Tidak ada Purchase Invoice, AP, pembayaran, retur supplier, atau POS yang dibuat.
 
 **Tujuan:** menerima barang tepat sekali dan menjaga outstanding PO.
 
@@ -293,7 +299,7 @@ Alasan urutan:
 
 **File/area:** action `PostGoodsReceipt`, receiving UI, policies/requests, integration dan concurrency tests.
 
-**Dependensi:** M1.1 dan M1.2; aturan over-receipt.
+**Dependensi:** M1.1 dan M1.2 terpenuhi; DEC-014 tetap OPEN sehingga default aman menolak over-receipt.
 
 **Acceptance criteria:** supplier/item termuat dari PO; partial receipt menyisakan outstanding; over-receipt ditolak/di-approval; double post tidak menambah stok dua kali; failure roll back receipt, movements, balances, dan status PO bersama.
 
@@ -420,4 +426,4 @@ Sebuah fitur hanya boleh dinyatakan selesai bila:
 
 ## 11. Titik mulai yang diizinkan berikutnya
 
-M1.1 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development forward-only, immutable ledger, balance projection, Moving Weighted Average, approval saldo awal, branch isolation/RBAC, audit/outbox, schema constraints, rollback/idempotency, concurrency dua proses, full regression suite, Blade compile, Pint, dan frontend build telah berhasil. DEC-002 dan DEC-003 tetap berlaku. **STOP:** M1.2 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.
+M1.2 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development forward-only, nomor PO transaction-safe, draft dan snapshot historis, lifecycle approval dengan separation of duties, branch isolation/RBAC, audit/outbox, rollback/idempotency, concurrency dua proses, full regression suite, Blade compile, Pint, dan frontend build telah berhasil tanpa mutasi inventory atau AP. DEC-007 dan DEC-013 tetap OPEN untuk nominal approval dan kewajiban mapping barang-supplier. **STOP:** M1.3 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.

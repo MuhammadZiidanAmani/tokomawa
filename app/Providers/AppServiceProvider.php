@@ -11,11 +11,15 @@ use App\Domain\Organization\Models\Warehouse;
 use App\Domain\Organization\Support\CurrentBranchContext;
 use App\Domain\Pricing\Models\PriceList;
 use App\Domain\Pricing\Models\TaxRule;
+use App\Domain\Purchasing\Models\GoodsReceipt;
+use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Suppliers\Models\Supplier;
 use App\Models\User;
 use App\Policies\BranchPolicy;
+use App\Policies\GoodsReceiptPolicy;
 use App\Policies\PriceListPolicy;
 use App\Policies\ProductPolicy;
+use App\Policies\PurchaseOrderPolicy;
 use App\Policies\RegisterPolicy;
 use App\Policies\ShelfLocationPolicy;
 use App\Policies\StockAdjustmentPolicy;
@@ -58,5 +62,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PriceList::class, PriceListPolicy::class);
         Gate::policy(TaxRule::class, TaxRulePolicy::class);
         Gate::policy(StockAdjustment::class, StockAdjustmentPolicy::class);
+        Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
+        Gate::policy(GoodsReceipt::class, GoodsReceiptPolicy::class);
     }
 }

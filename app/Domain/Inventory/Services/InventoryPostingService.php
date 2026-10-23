@@ -5,20 +5,25 @@ namespace App\Domain\Inventory\Services;
 use App\Domain\Access\DTOs\AuditContext;
 use App\Domain\Access\Models\ApprovalRequest;
 use App\Domain\Access\Services\AuditLogger;
+use App\Domain\Catalog\Models\Product;
 use App\Domain\Inventory\Enums\StockAdjustmentStatus;
 use App\Domain\Inventory\Enums\StockAdjustmentType;
 use App\Domain\Inventory\Models\InventoryBalance;
+use App\Domain\Inventory\Models\InventoryBatch;
 use App\Domain\Inventory\Models\InventoryMovement;
 use App\Domain\Inventory\Models\StockAdjustment;
 use App\Domain\Inventory\Models\StockAdjustmentItem;
+use App\Domain\Organization\Models\Branch;
 use App\Domain\Organization\Models\Warehouse;
 use App\Domain\Shared\DTOs\IdempotencyResult;
 use App\Domain\Shared\Services\IdempotencyService;
 use App\Domain\Shared\Services\OutboxRecorder;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 class InventoryPostingService
 {
@@ -95,6 +100,81 @@ class InventoryPostingService
         );
     }
 
+    public function receive(
+        Branch $branch,
+        Warehouse $warehouse,
+        Product $product,
+        ?InventoryBatch $batch,
+        string $baseQuantity,
+        string $baseUnitCost,
+        string $sourceId,
+        string $sourceLineId,
+        CarbonInterface $occurredAt,
+        User $actor,
+        string $idempotencyKey,
+    ): InventoryMovement {
+        if (DB::transactionLevel() < 1) {
+            throw new LogicException('Posting penerimaan inventory wajib berada di dalam transaksi database.');
+        }
+
+        if ($warehouse->branch_id !== $branch->getKey()) {
+            throw new DomainException('Gudang penerimaan tidak berada pada cabang yang sama.');
+        }
+
+        if ($batch !== null && ($batch->branch_id !== $branch->getKey() || $batch->product_id !== $product->getKey())) {
+            throw new DomainException('Batch penerimaan tidak sesuai dengan cabang atau barang.');
+        }
+
+        $quantity = InventoryDecimal::quantity($baseQuantity);
+        if (bccomp($quantity, '0', 3) <= 0) {
+            throw new DomainException('Kuantitas penerimaan harus lebih dari nol.');
+        }
+
+        $unitCost = InventoryDecimal::cost($baseUnitCost);
+        $balance = $this->lockBalanceScope(
+            $branch->getKey(),
+            $warehouse->getKey(),
+            $product->getKey(),
+            $batch,
+            'sellable',
+        );
+        $newQuantity = bcadd($balance->qty_on_hand, $quantity, 3);
+        $valueDelta = InventoryDecimal::value($quantity, $unitCost);
+        $newValue = bcadd($balance->inventory_value, $valueDelta, 6);
+        $newAverage = InventoryDecimal::averageFromValue($newValue, $newQuantity);
+
+        $balance->update([
+            'qty_on_hand' => $newQuantity,
+            'avg_unit_cost' => $newAverage,
+            'inventory_value' => $newValue,
+            'version' => $balance->version + 1,
+        ]);
+
+        return InventoryMovement::query()->create([
+            'branch_id' => $branch->getKey(),
+            'warehouse_id' => $warehouse->getKey(),
+            'product_id' => $product->getKey(),
+            'inventory_batch_id' => $batch?->getKey(),
+            'batch_scope' => $balance->batch_scope,
+            'stock_status' => 'sellable',
+            'movement_type' => 'goods_receipt',
+            'direction' => 'in',
+            'qty_delta' => $quantity,
+            'qty_after' => $newQuantity,
+            'unit_cost_snapshot' => $unitCost,
+            'value_delta' => $valueDelta,
+            'source_type' => 'goods_receipt',
+            'source_id' => $sourceId,
+            'source_line_id' => $sourceLineId,
+            'source_key' => "goods-receipt:{$sourceLineId}:in:{$warehouse->getKey()}",
+            'idempotency_key' => $idempotencyKey,
+            'occurred_at' => $occurredAt,
+            'posted_at' => now(),
+            'created_by' => $actor->getKey(),
+            'created_at' => now(),
+        ]);
+    }
+
     private function postItem(
         StockAdjustment $adjustment,
         StockAdjustmentItem $item,
@@ -146,18 +226,34 @@ class InventoryPostingService
 
     private function lockBalance(StockAdjustment $adjustment, StockAdjustmentItem $item, int $warehouseId): InventoryBalance
     {
-        $batchScope = $item->batch?->public_id ?? 'NO-BATCH';
+        return $this->lockBalanceScope(
+            $adjustment->branch_id,
+            $warehouseId,
+            $item->product_id,
+            $item->batch,
+            $item->stock_status,
+        );
+    }
+
+    private function lockBalanceScope(
+        int $branchId,
+        int $warehouseId,
+        int $productId,
+        ?InventoryBatch $batch,
+        string $stockStatus,
+    ): InventoryBalance {
+        $batchScope = $batch?->public_id ?? 'NO-BATCH';
         $scope = [
             'warehouse_id' => $warehouseId,
-            'product_id' => $item->product_id,
+            'product_id' => $productId,
             'batch_scope' => $batchScope,
-            'stock_status' => $item->stock_status,
+            'stock_status' => $stockStatus,
         ];
 
         DB::table('inventory_balances')->insertOrIgnore([
             ...$scope,
-            'branch_id' => $adjustment->branch_id,
-            'inventory_batch_id' => $item->inventory_batch_id,
+            'branch_id' => $branchId,
+            'inventory_batch_id' => $batch?->getKey(),
             'qty_on_hand' => '0.000',
             'qty_reserved' => '0.000',
             'avg_unit_cost' => '0.000000',

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Purchasing;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Domain\Purchasing\Models\PurchaseOrder;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubmitPurchaseOrderRequest extends FormRequest
@@ -12,18 +12,22 @@ class SubmitPurchaseOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $purchaseOrder = $this->route('purchase_order');
+
+        return $purchaseOrder instanceof PurchaseOrder
+            && ($this->user()?->can('submit', $purchaseOrder) ?? false);
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            //
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+            'idempotency_key' => ['required', 'uuid'],
         ];
     }
 }

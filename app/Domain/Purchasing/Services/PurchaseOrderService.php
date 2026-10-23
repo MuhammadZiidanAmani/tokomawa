@@ -18,7 +18,6 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Collection;
 
 class PurchaseOrderService
 {

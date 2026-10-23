@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Domain\Purchasing\Models\PurchaseOrderItem;
 use App\Domain\Catalog\Models\Product;
 use App\Domain\Catalog\Models\Unit;
 use App\Domain\Purchasing\Models\PurchaseOrder;
+use App\Domain\Purchasing\Models\PurchaseOrderItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PurchaseOrderItemFactory extends Factory
 {
+    protected $model = PurchaseOrderItem::class;
+
     /**
      * Define the model's default state.
      *

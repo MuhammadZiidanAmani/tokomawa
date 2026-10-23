@@ -112,4 +112,49 @@ class ApprovalService
             return $lockedRequest;
         });
     }
+
+    public function reject(
+        ApprovalRequest $approvalRequest,
+        User $approver,
+        string $decisionNotes,
+    ): ApprovalRequest {
+        return DB::transaction(function () use ($approvalRequest, $approver, $decisionNotes): ApprovalRequest {
+            $lockedRequest = ApprovalRequest::query()
+                ->with('branch')
+                ->lockForUpdate()
+                ->findOrFail($approvalRequest->getKey());
+
+            if ($lockedRequest->status !== ApprovalRequest::STATUS_PENDING) {
+                throw new DomainException('Permintaan persetujuan sudah diputuskan.');
+            }
+
+            $amount = $lockedRequest->amount ?? '0.00';
+            if (! $this->limitEvaluator->canApprove(
+                $approver,
+                $lockedRequest->branch,
+                $lockedRequest->permission_code,
+                $amount,
+            )) {
+                throw new AuthorizationException;
+            }
+
+            $lockedRequest->update([
+                'status' => ApprovalRequest::STATUS_REJECTED,
+                'approved_by' => $approver->getKey(),
+                'decision_notes' => $decisionNotes,
+                'decided_at' => now(),
+            ]);
+
+            $this->auditLogger->record(
+                new AuditContext($approver, $lockedRequest->branch, $decisionNotes),
+                'approval.rejected',
+                'approval_request',
+                $lockedRequest->public_id,
+                before: ['status' => ApprovalRequest::STATUS_PENDING],
+                after: ['status' => ApprovalRequest::STATUS_REJECTED],
+            );
+
+            return $lockedRequest;
+        });
+    }
 }

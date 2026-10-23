@@ -1,9 +1,9 @@
 # Project Progress — Retail Management System
 
 **Tanggal pembaruan:** 23 Oktober 2026
-**Tahap aktif:** M1.1 — COMPLETED; berhenti sebelum M1.2
-**Status implementasi aplikasi:** M1.1 COMPLETED pada MariaDB 11.8.8/InnoDB; immutable stock ledger, balance projection, Moving Weighted Average, opening balance approval, reconciliation, full regression suite, dan concurrency dua proses lulus
-**Gate:** M1.2 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
+**Tahap aktif:** M1.3 — IN_PROGRESS
+**Status implementasi aplikasi:** Dependency M1.1/M1.2 dan kontrak inventory/PO telah diaudit; implementasi Goods Receipt sedang berjalan pada MariaDB/InnoDB
+**Gate:** M1.4 tetap terkunci sampai M1.3 lulus seluruh acceptance criteria dan pengguna memberikan instruksi eksplisit **LANJUT**
 
 ## 1. Ringkasan status
 
@@ -20,9 +20,10 @@
 | Implementasi M0.2 | **COMPLETED** | Delapan migration development, 59 test/325 assertion, audit 24 tabel InnoDB, dan concurrency dua proses untuk sequence/idempotency lulus pada MariaDB. |
 | Implementasi M0.3 | **COMPLETED** | Master katalog, supplier, unit/konversi, lokasi, harga efektif, dan pajak configurable telah berjalan; 82 test/578 assertion lulus. |
 | Implementasi M1.1 | **COMPLETED** | Stock ledger immutable, saldo per gudang/batch, MWA, opening balance approval, transfer internal, dan rekonsiliasi lulus 101 test/760 assertion serta concurrency dua proses. |
-| Implementasi transaksi lanjutan | Belum dimulai | Purchase Order, Goods Receipt, POS, keuangan, dan milestone sesudah M1.1 tetap belum dimulai. |
+| Implementasi M1.2 | **COMPLETED** | Purchase Order draft/workflow, snapshot, approval limit, audit, idempotency, dan nomor PO concurrency-safe lulus 122 test/952 assertion full suite. |
+| Implementasi M1.3 | **IN_PROGRESS** | Goods Receipt parsial dari PO sedang dibangun; Purchase Invoice/AP, POS, dan keuangan tetap belum dimulai. |
 
-**Interpretasi progres:** planning baseline, M0.1–M0.3, dan M1.1 selesai. Fondasi organisasi/reliabilitas, master data, serta ledger dan proyeksi stok telah tervalidasi pada MariaDB/InnoDB. Purchasing, Goods Receipt, POS, dan keuangan belum dimulai; M1.2 menunggu instruksi pengguna.
+**Interpretasi progres:** planning baseline, M0.1–M0.3, M1.1, dan M1.2 selesai. Fondasi organisasi/reliabilitas, master data, ledger/proyeksi stok, serta Purchase Order telah tervalidasi pada MariaDB/InnoDB. Goods Receipt, Purchase Invoice/AP, POS, dan keuangan belum dimulai; M1.3 menunggu instruksi pengguna.
 
 ## 2. Baseline lingkungan yang terverifikasi
 
@@ -99,8 +100,14 @@
 | Concurrency stok terakhir M1.1 | Lulus — 1 test, 10 assertion; dua proses PHP independen memperebutkan satu unit, tepat satu berhasil dan saldo tidak pernah negatif |
 | Full regression suite setelah M1.1 | Lulus — 101 test, 760 assertion, 0 failure pada `retail_testing` |
 | Quality gate M1.1 | Lulus — Laravel Pint, Blade cache, 8 route persediaan, dan Vite/Tailwind production build |
+| Migration M1.2 development | Lulus — dry-run DDL ditinjau, migration batch 4 berjalan forward-only; seluruh 14 migration berstatus `Ran`, tanpa reset/drop/data dummy |
+| Audit schema M1.2 | Lulus — `purchase_orders` dan `purchase_order_items` InnoDB; 13 foreign key, 7 unique index, query index, serta seluruh kolom uang/qty fixed DECIMAL terverifikasi |
+| Targeted Purchase Order suite | Lulus — 21 test, 136 assertion untuk draft/edit, validation, snapshot, presisi, rollback, workflow, RBAC, branch isolation, audit, idempotency, dan concurrency |
+| Concurrency nomor PO M1.2 | Lulus — 1 test, 11 assertion; dua proses PHP independen menghasilkan `PO/2026/10/000001` dan `000002` tanpa duplikasi |
+| Full regression suite setelah M1.2 | Lulus — 122 test, 952 assertion, 0 failure pada `retail_testing` |
+| Quality gate M1.2 | Lulus — Laravel Pint, Blade cache, 11 route purchasing, dan Vite/Tailwind production build |
 
-Catatan: bukti terbaru membuktikan acceptance M0.1, M0.2, M0.3, dan M1.1; belum membuktikan purchasing, Goods Receipt, POS, atau keuangan.
+Catatan: bukti terbaru membuktikan acceptance M0.1, M0.2, M0.3, M1.1, dan M1.2; belum membuktikan Goods Receipt, Purchase Invoice/AP, POS, atau keuangan.
 
 ## 5. Artefak yang dibuat/diubah pada tahap awal
 
@@ -149,6 +156,8 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 | DEC-010 | QRIS/EDC | OPEN | Ditunda ke F2 setelah provider/alur dipilih |
 | DEC-011 | Settlement konsinyasi | OPEN | Perlu keputusan kontrak |
 | DEC-012 | Device dan volume | OPEN | Perlu data perangkat, SKU, transaksi/hari, kasir simultan |
+| DEC-013 | Kewajiban relasi barang-supplier pada PO | OPEN | Default konfigurasi tidak mewajibkan mapping; dapat diaktifkan setelah kebijakan procurement disahkan |
+| DEC-014 | Toleransi over-receipt | OPEN | Default M1.3 menolak kuantitas di atas outstanding; tolerance/approval tidak diasumsikan |
 
 ## 7. Status milestone
 
@@ -159,7 +168,7 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 | M0.2 Organization, RBAC, approval, audit, idempotency, sequence | **COMPLETED** | Migration/full suite/schema audit/concurrency lulus pada MariaDB/InnoDB; bukti final tercatat pada bagian 16. |
 | M0.3 Master/catalog/supplier/pricing/tax | **COMPLETED** | Empat migration development `Ran`; 82 test/578 assertion, schema audit, Pint, Blade compile, dan frontend build lulus. |
 | M1.1 Stock ledger, balance, costing | **COMPLETED** | Migration development, 5 tabel InnoDB, 101 test/760 assertion, concurrency dua proses, Pint, Blade compile, dan frontend build lulus; bukti final pada bagian 18. |
-| M1.2 Purchase Order | Belum dimulai | Bergantung fondasi/master. |
+| M1.2 Purchase Order | **COMPLETED** | Dua tabel InnoDB, 21 test/136 assertion targeted, 122 test/952 assertion full suite, concurrency dua proses, Pint/Blade/build lulus; bukti pada bagian 19. |
 | M1.3 Goods receipt | Belum dimulai | Bergantung PO dan stock ledger. |
 | M1.4 Purchase invoice/AP minimum | Belum dimulai | Bergantung receipt. |
 | M1.5 Shift/POS cash | Belum dimulai | Bergantung stock ledger, pricing dasar, register. |
@@ -172,11 +181,11 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 
 1. MariaDB 11.8.8 dan driver PHP tersedia; aplikasi memakai akun khusus `retail_app`, bukan root, dengan scope hanya `retail_development` dan `retail_testing`.
 2. `.env` lokal diarahkan ke koneksi native Laravel `mariadb` dan `retail_development`; `phpunit.xml` mengisolasi test ke `retail_testing`; secret tidak dicatat dalam dokumen atau output aplikasi.
-3. Database development memiliki 1 user dan 1 cabang yang sudah ada; migration M1.1 mempertahankan keduanya dan tidak membuat data transaksi contoh.
+3. Database development memiliki 1 user dan 1 cabang yang sudah ada; migration M1.2 mempertahankan keduanya, tidak membuat PO/item contoh, dan tidak mengubah data inventory.
 4. `SESSION_SECURE_COOKIE=false` diperlukan untuk HTTP lokal; production HTTPS wajib mengaturnya menjadi `true`.
 5. Build memberi warning opsional `fontaine` untuk optimized font fallback, tetapi build berhasil dan aset Inter terbentuk.
-6. MFA privileged, jumlah gudang/register operasional, kebijakan final PPN/rounding, nominal approval bisnis, perangkat, dan volume masih perlu diputuskan pada milestone terkait. Struktur pajak effective-dated sudah tersedia tanpa tarif hardcoded; DEC-006 tetap OPEN.
-7. Repository Git sudah memiliki riwayat lokal; perubahan M1.1 belum dibuatkan commit karena pembuatan commit tetap menjadi keputusan pengguna.
+6. MFA privileged, jumlah gudang/register operasional, kebijakan final PPN/rounding, nominal approval bisnis, kewajiban mapping barang-supplier, perangkat, dan volume masih perlu diputuskan pada milestone terkait. DEC-006, DEC-007, dan DEC-013 tetap OPEN.
+7. Repository Git sudah memiliki riwayat lokal; perubahan M1.2 belum dibuatkan commit karena pembuatan commit tetap menjadi keputusan pengguna.
 
 ## 9. Protokol pembaruan milestone
 
@@ -198,7 +207,7 @@ Next gate: STOP — menunggu LANJUT
 
 ## 10. Aksi berikutnya
 
-STOP setelah M1.1 COMPLETED. Jangan memulai M1.2 sebelum pengguna memberikan instruksi eksplisit **LANJUT**.
+Kerjakan hanya M1.3 Goods Receipt. M1.4 tetap terkunci sampai M1.3 lulus dan pengguna memberikan instruksi eksplisit **LANJUT**.
 
 ## 11. Audit pembukaan M1.1 — 22 Oktober 2026
 
@@ -581,3 +590,99 @@ STOP setelah M1.1 COMPLETED. Jangan memulai M1.2 sebelum pengguna memberikan ins
 **Batas scope:** Purchase Order, Goods Receipt, POS, Finance, dan milestone sesudah M1.1 tidak dimulai.
 
 **Next gate:** STOP — M1.1 COMPLETED. Jangan memulai M1.2 sebelum instruksi eksplisit **LANJUT** dari pengguna.
+
+## 19. M1.2 — Purchase Order — 23 Oktober 2026
+
+**Status:** COMPLETED — seluruh acceptance criteria M1.2 lulus pada MariaDB/InnoDB.
+
+**Fitur yang berfungsi:**
+
+- Draft PO branch-scoped dengan nomor `PO/YYYY/MM/######` dari `DocumentNumberService`, supplier aktif, tanggal, estimasi kedatangan, catatan, dan item yang dapat ditambah/diubah/dihapus selama draft.
+- Pemilihan barang cepat berdasarkan SKU/nama, satuan dasar atau satuan pembelian aktif, faktor konversi, harga beli, subtotal, total, serta validasi server-side Bahasa Indonesia.
+- Snapshot supplier, alamat, SKU/nama barang, SKU supplier, satuan, faktor konversi, kuantitas, harga, dan subtotal menjaga histori dari perubahan master berikutnya.
+- Lifecycle terkontrol: `draft` → `pending_approval` → `approved`/`rejected` → `sent`, serta pembatalan dari status yang diizinkan. Status `partially_received` dan `completed` disiapkan tetapi tidak ditransisikan sebelum M1.3.
+- Approval memakai total PO, approval limit cabang/role/permission, larangan self-approval, row locking, audit append-only, dan transactional outbox.
+- Create, update, submit, approve, reject, send, dan cancel memakai transaction/idempotency; replay key yang sama tidak menggandakan dokumen, approval, audit, atau outbox.
+- Daftar, create, edit draft, detail, filter supplier/status/search, pagination, empty/error/loading state, workflow action, dan riwayat audit tersedia dalam UI Bahasa Indonesia.
+
+**Batas bisnis yang terbukti:**
+
+- Pembuatan, approval, pengiriman, penolakan, dan pembatalan PO tidak menulis `inventory_movements` atau `inventory_balances`.
+- M1.2 tidak membuat tabel/record Goods Receipt, Purchase Invoice, AP entry, supplier payment, atau payment lain.
+- `received_base_quantity` dimulai dari nol dan outstanding dihitung dari snapshot base quantity; hanya penerimaan sah M1.3 yang boleh mengubahnya.
+- Approved PO tidak dapat diedit melalui Policy, Form Request, controller, maupun service; tidak ada route hard-delete PO.
+
+**Migration dan schema:**
+
+- `2026_10_23_025715_create_m1_2_purchase_order_tables` membuat `purchase_orders` dan `purchase_order_items` sebagai InnoDB.
+- Dry-run menunjukkan hanya operasi create table, foreign key, unique constraint, dan index; migration berjalan forward-only sebagai batch 4 pada `retail_development`.
+- Seluruh 14 migration development berstatus `Ran`. Setelah migration tetap 1 user, 1 cabang, 0 inventory movement, 0 inventory balance, 0 PO, dan 0 item PO.
+- Dua tabel M1.2 memiliki 13 foreign key dan 7 unique index. Index query mencakup branch/status/tanggal, supplier/status/tanggal, document number scoped cabang, line number, dan product per PO.
+- Total/subtotal memakai `DECIMAL(24,2)`, harga `DECIMAL(18,2)`, kuantitas/base/outstanding `DECIMAL(18,3)`, dan faktor konversi `DECIMAL(18,6)`, seluruhnya `UNSIGNED` bila tidak boleh negatif.
+- `AccessControlSeeder` idempoten menambahkan 7 permission Purchase Order; tidak membuat akun atau transaksi bisnis.
+
+**File/area utama:**
+
+- Domain: `app/Domain/Purchasing/{Enums,Models,Services}/**` untuk state, model, BCMath calculator, draft transaction, dan workflow.
+- Governance: penambahan reject generik ber-row-lock pada `ApprovalService`, policy PO, Gate registration, dan permission matrix.
+- HTTP/UI: controller serta Form Request purchasing, route `/pembelian/purchase-order`, tiga Blade view PO, dan navigasi sidebar.
+- Database/test: migration, factory PO/item, service/HTTP/schema/concurrency test M1.2.
+
+**Pengujian dan quality gate:**
+
+- Targeted domain/HTTP/schema plus concurrency final: 21 test, 136 assertion — PASSED.
+- Concurrency MariaDB/InnoDB: 1 test, 11 assertion — PASSED; dua proses PHP independen menghasilkan nomor `PO/2026/10/000001` dan `PO/2026/10/000002`, dua dokumen unik, dan sequence akhir 2.
+- Full regression M0.1–M1.2: 122 test, 952 assertion, 0 failure — PASSED pada `retail_testing`.
+- Laravel Pint `--dirty --format agent` — PASSED; targeted suite diulang setelah formatting dan tetap lulus.
+- `php artisan view:cache` — PASSED; 11 route purchasing terdaftar di bawah auth, current branch, dan permission middleware.
+- `npm run build` — PASSED dengan Vite 8.3.5/Tailwind CSS 4; warning opsional `fontaine` tidak memengaruhi build.
+
+**Temuan dan perbaikan:**
+
+1. Fondasi approval hanya memiliki jalur approve; jalur reject generik ditambahkan dengan evaluator limit, row lock, actor, decision notes, dan audit yang konsisten.
+2. Factory model modular semula mengandalkan inferensi namespace default; properti model eksplisit ditambahkan agar factory PO/item selalu mengarah ke domain model yang benar.
+3. Workflow error semula berpotensi menjadi halaman 422 generik; controller mengembalikannya sebagai validation/error state pada halaman detail.
+4. Policy approval diperketat agar self-approval tidak hanya ditolak di service, tetapi aksi juga tidak ditampilkan dan endpoint mengembalikan 403.
+5. Product picker dibatasi 500 master aktif yang dimuat satu kali, dengan pencarian client-side dan maksimal 50 opsi per baris untuk menghindari request berulang dan DOM berlebihan. Untuk volume SKU jauh lebih besar, endpoint autocomplete terindeks perlu dievaluasi pada performance milestone.
+
+**Keputusan terbuka:**
+
+- DEC-007 tetap OPEN untuk nominal approval per role. Struktur dan enforcement tersedia; tanpa approval limit yang cocok, user non-Super Admin tidak dapat menyetujui PO.
+- DEC-013 ditambahkan sebagai OPEN: apakah setiap item PO wajib memiliki mapping `supplier_products`. Default konfigurasi saat ini tidak mewajibkan mapping; bila diaktifkan, service menolak item tanpa relasi aktif.
+- DEC-006 tetap OPEN; pajak dan diskon PO sengaja tidak diterapkan atau diasumsikan pada M1.2.
+
+**Acceptance criteria final:**
+
+- [x] Nomor PO unik dan transaction-safe; dua proses independen tidak menghasilkan duplikasi.
+- [x] Draft multi-item dapat dibuat/diedit dengan supplier/produk/satuan aktif, qty positif, harga non-negatif, dan total presisi.
+- [x] Snapshot historis lengkap tersimpan dan outstanding dasar disiapkan untuk penerimaan parsial M1.3.
+- [x] State machine, approval/rejection, approval limit, duplicate prevention, self-approval, send, dan cancel teruji.
+- [x] RBAC, Policy/Gate, branch isolation 404, Form Request, audit log, dan outbox teruji.
+- [x] Transaction rollback dan idempotency tidak meninggalkan dokumen, sequence, claim, approval, audit, atau side effect parsial.
+- [x] PO approved tidak dapat diedit dan dokumen tidak memiliki jalur hard-delete.
+- [x] Tidak ada perubahan stok, inventory ledger/balance, AP, invoice, atau payment akibat PO.
+- [x] Migration development aman; schema InnoDB, DECIMAL, FK, index, dan unique constraint terverifikasi.
+- [x] Full regression, Pint, Blade compile, route audit, dan frontend build lulus.
+
+**Risiko untuk M1.3:** aturan over-receipt/tolerance, penerimaan produk pengganti, lot/expiry saat receiving, dan siapa yang boleh menutup outstanding PO belum boleh diasumsikan. Goods Receipt harus memakai `InventoryPostingService`, unique source/idempotency, stable-order locking, dan tidak boleh membentuk AP.
+
+**Next gate:** STOP — M1.2 COMPLETED. Jangan memulai M1.3 sebelum instruksi eksplisit **LANJUT** dari pengguna.
+
+## 20. Pembukaan M1.3 — Goods Receipt / Penerimaan Barang — 23 Oktober 2026
+
+**Status:** IN_PROGRESS
+
+**Dependency yang diverifikasi:** M1.1 dan M1.2 berstatus COMPLETED; `InventoryPostingService`, immutable `inventory_movements`, projection `inventory_balances`, MWA, PO lifecycle, snapshot item, `received_base_quantity`, document sequence, idempotency, audit, outbox, RBAC, serta branch/warehouse scope tersedia.
+
+**Rencana file/area:**
+
+- Domain `app/Domain/Purchasing/{Enums,Models,Services}/**` untuk draft, pembatalan, batch resolution, dan posting atomik Goods Receipt.
+- Perluasan terkontrol `InventoryPostingService` sebagai satu-satunya jalur incoming inventory dari receipt.
+- Policy, Form Request, controller, route, sidebar, dan Blade UI daftar/form/detail receiving berbahasa Indonesia.
+- Migration forward-only `goods_receipts` dan `goods_receipt_items`, factory, schema/integration/HTTP/concurrency tests.
+
+**Rencana transaction order:** klaim idempotency → lock receipt → lock PO → lock item PO berdasarkan ID stabil → validasi outstanding dan batch/expiry → lock/create balance → movement + MWA → update received quantity/status PO → mark receipt posted → audit/outbox → commit.
+
+**Batas keputusan:** DEC-014 tetap OPEN; over-receipt ditolak. Produk pengganti tidak diterima. Batch diwajibkan hanya jika konfigurasi produk mewajibkannya. Draft/cancelled tidak mengubah stok atau outstanding. Posted receipt immutable dan koreksi pascaposting bukan scope M1.3.
+
+**Batas scope:** tidak membuat Purchase Invoice, AP entry, pembayaran, retur supplier, POS, atau milestone M1.4.

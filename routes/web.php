@@ -11,6 +11,9 @@ use App\Http\Controllers\Master\ProductController;
 use App\Http\Controllers\Master\ReferenceDataController;
 use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\UnitController;
+use App\Http\Controllers\Purchasing\GoodsReceiptController;
+use App\Http\Controllers\Purchasing\PurchaseOrderController;
+use App\Http\Controllers\Purchasing\PurchaseOrderWorkflowController;
 use App\Http\Controllers\Settings\AccessAssignmentController;
 use App\Http\Controllers\Settings\ApprovalLimitController;
 use App\Http\Controllers\Settings\BranchController;
@@ -92,6 +95,40 @@ Route::middleware('auth')->group(function (): void {
                 Route::post('/harga', [PricingController::class, 'storePrice'])->name('prices.store');
                 Route::post('/pajak', [PricingController::class, 'storeTaxRule'])->name('tax-rules.store');
                 Route::put('/pajak/{taxRule}', [PricingController::class, 'updateTaxRule'])->name('tax-rules.update');
+            });
+
+        Route::prefix('pembelian')
+            ->name('purchasing.')
+            ->middleware('permission:purchase_orders.view')
+            ->group(function (): void {
+                Route::resource('purchase-order', PurchaseOrderController::class)
+                    ->parameters(['purchase-order' => 'purchase_order'])
+                    ->only(['index', 'create', 'store', 'show', 'edit', 'update'])
+                    ->names('purchase-orders');
+                Route::post('/purchase-order/{purchase_order}/ajukan', [PurchaseOrderWorkflowController::class, 'submit'])
+                    ->name('purchase-orders.submit');
+                Route::post('/purchase-order/{purchase_order}/setujui', [PurchaseOrderWorkflowController::class, 'approve'])
+                    ->name('purchase-orders.approve');
+                Route::post('/purchase-order/{purchase_order}/tolak', [PurchaseOrderWorkflowController::class, 'reject'])
+                    ->name('purchase-orders.reject');
+                Route::post('/purchase-order/{purchase_order}/kirim', [PurchaseOrderWorkflowController::class, 'send'])
+                    ->name('purchase-orders.send');
+                Route::post('/purchase-order/{purchase_order}/batalkan', [PurchaseOrderWorkflowController::class, 'cancel'])
+                    ->name('purchase-orders.cancel');
+            });
+
+        Route::prefix('pembelian')
+            ->name('purchasing.')
+            ->middleware('permission:goods_receipts.view')
+            ->group(function (): void {
+                Route::resource('penerimaan-barang', GoodsReceiptController::class)
+                    ->parameters(['penerimaan-barang' => 'goods_receipt'])
+                    ->only(['index', 'create', 'store', 'show', 'edit', 'update'])
+                    ->names('goods-receipts');
+                Route::post('/penerimaan-barang/{goods_receipt}/posting', [GoodsReceiptController::class, 'post'])
+                    ->name('goods-receipts.post');
+                Route::post('/penerimaan-barang/{goods_receipt}/batalkan', [GoodsReceiptController::class, 'cancel'])
+                    ->name('goods-receipts.cancel');
             });
 
         Route::prefix('pengaturan')

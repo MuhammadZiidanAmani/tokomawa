@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Inventory;
 
-use App\Domain\Catalog\Models\Product;
 use App\Domain\Inventory\Models\InventoryBalance;
 use App\Domain\Inventory\Models\InventoryMovement;
 use App\Domain\Inventory\Models\StockAdjustment;
