@@ -180,9 +180,9 @@ class InventoryPostingService
     ): void {
         $quantity = InventoryDecimal::quantity($item->base_quantity);
         $newQuantity = bcadd($balance->qty_on_hand, $quantity, 3);
-        $newAverage = InventoryDecimal::weightedAverage($balance->qty_on_hand, $balance->avg_unit_cost, $quantity, $unitCost);
-        $newValue = InventoryDecimal::value($newQuantity, $newAverage);
         $valueDelta = InventoryDecimal::value($quantity, $unitCost);
+        $newValue = bcadd($balance->inventory_value, $valueDelta, 6);
+        $newAverage = InventoryDecimal::averageFromValue($newValue, $newQuantity);
 
         $balance->update([
             'qty_on_hand' => $newQuantity,
@@ -208,9 +208,11 @@ class InventoryPostingService
 
         $unitCost = InventoryDecimal::cost($balance->avg_unit_cost);
         $newQuantity = bcsub($balance->qty_on_hand, $quantity, 3);
-        $newAverage = bccomp($newQuantity, '0', 3) === 0 ? '0.000000' : $unitCost;
-        $newValue = InventoryDecimal::value($newQuantity, $newAverage);
         $valueDelta = '-'.InventoryDecimal::value($quantity, $unitCost);
+        $newValue = bccomp($newQuantity, '0', 3) === 0
+            ? '0.000000'
+            : bcadd($balance->inventory_value, $valueDelta, 6);
+        $newAverage = InventoryDecimal::averageFromValue($newValue, $newQuantity);
 
         $balance->update([
             'qty_on_hand' => $newQuantity,

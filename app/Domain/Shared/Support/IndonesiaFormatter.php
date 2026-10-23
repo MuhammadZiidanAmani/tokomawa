@@ -28,6 +28,20 @@ class IndonesiaFormatter
         return ($negative ? '-Rp ' : 'Rp ').$formatted.($fraction !== '' ? ','.$fraction : '');
     }
 
+    public function quantity(string $amount, int $scale = 3): string
+    {
+        $normalized = trim($amount);
+        $negative = str_starts_with($normalized, '-');
+        $unsigned = ltrim($normalized, '+-');
+        [$integer, $fraction] = array_pad(explode('.', $unsigned, 2), 2, '');
+        $integer = ltrim($integer, '0');
+        $integer = $integer === '' ? '0' : $integer;
+        $fraction = rtrim(substr($fraction, 0, $scale), '0');
+        $formatted = preg_replace('/\B(?=(\d{3})+(?!\d))/', '.', $integer) ?? $integer;
+
+        return ($negative ? '-' : '').$formatted.($fraction !== '' ? ','.$fraction : '');
+    }
+
     public function dateTime(CarbonInterface $dateTime): string
     {
         return CarbonImmutable::instance($dateTime)

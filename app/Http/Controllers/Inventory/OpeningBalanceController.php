@@ -41,6 +41,7 @@ class OpeningBalanceController extends Controller
         abort_if($branch === null, 404);
         $data = $request->validated();
         $warehouse = Warehouse::query()->findOrFail($data['warehouse_id']);
+        abort_if($warehouse->branch_id !== $branch->getKey(), 404);
 
         $adjustment = $service->submitOpeningBalance(
             $request->user(),
@@ -59,8 +60,10 @@ class OpeningBalanceController extends Controller
     public function approve(
         ApproveOpeningBalanceRequest $request,
         StockAdjustment $adjustment,
+        CurrentBranchContext $context,
         OpeningBalanceApprovalService $service,
     ): RedirectResponse {
+        abort_if($context->get()?->getKey() !== $adjustment->branch_id, 404);
         Gate::authorize('approve', $adjustment);
         $data = $request->validated();
         $result = $service->approveAndPost($adjustment, $request->user(), $data['decision_notes'], $data['idempotency_key']);

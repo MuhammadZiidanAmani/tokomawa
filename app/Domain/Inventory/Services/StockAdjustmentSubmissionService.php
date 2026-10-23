@@ -79,13 +79,13 @@ class StockAdjustmentSubmissionService
                     'submitted_at' => now(),
                 ]);
 
-                $approvalAmount = '0.00';
+                $approvalAmount = '0.000000';
                 foreach ($items as $index => $itemData) {
                     $product = Product::query()->with('units')->findOrFail($itemData['product_id']);
                     $batch = $this->resolveBatch($branch, $product, $itemData, $requester);
                     $baseQuantity = $this->toBaseQuantity($product, $itemData['unit_id'], $itemData['quantity']);
                     $unitCost = InventoryDecimal::cost($itemData['unit_cost']);
-                    $approvalAmount = bcadd($approvalAmount, InventoryDecimal::value($baseQuantity, $unitCost), 2);
+                    $approvalAmount = bcadd($approvalAmount, InventoryDecimal::value($baseQuantity, $unitCost), 6);
 
                     $adjustment->items()->create([
                         'line_number' => $index + 1,
@@ -106,7 +106,7 @@ class StockAdjustmentSubmissionService
                     'inventory.opening.approve',
                     'stock_adjustment',
                     $adjustment->public_id,
-                    $approvalAmount,
+                    bcround($approvalAmount, 2),
                     $reason,
                     'opening:'.$submissionKey,
                 );

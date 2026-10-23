@@ -9,12 +9,13 @@ class StockAdjustmentPolicy
 {
     public function view(User $user, StockAdjustment $adjustment): bool
     {
-        return $user->hasPermission('inventory.view') && $user->canAccessBranch($adjustment->branch);
+        return $user->hasPermission('inventory.view')
+            && $adjustment->branch()->whereHas('users', fn ($query) => $query->whereKey($user->getKey()))->exists();
     }
 
     public function approve(User $user, StockAdjustment $adjustment): bool
     {
         return $user->hasPermission('inventory.opening.approve')
-            && $user->canAccessBranch($adjustment->branch);
+            && $adjustment->branch()->whereHas('users', fn ($query) => $query->whereKey($user->getKey()))->exists();
     }
 }

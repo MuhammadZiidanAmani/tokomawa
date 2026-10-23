@@ -2,8 +2,6 @@
 
 namespace App\Domain\Inventory\Services;
 
-use DomainException;
-
 class InventoryDecimal
 {
     public static function quantity(string $value): string
@@ -21,21 +19,12 @@ class InventoryDecimal
         return bcmul($quantity, $unitCost, 6);
     }
 
-    public static function weightedAverage(
-        string $currentQuantity,
-        string $currentAverage,
-        string $incomingQuantity,
-        string $incomingCost,
-    ): string {
-        $newQuantity = bcadd($currentQuantity, $incomingQuantity, 3);
-
-        if (bccomp($newQuantity, '0', 3) <= 0) {
-            throw new DomainException('Kuantitas hasil perhitungan HPP harus lebih dari nol.');
+    public static function averageFromValue(string $inventoryValue, string $quantity): string
+    {
+        if (bccomp($quantity, '0', 3) <= 0) {
+            return '0.000000';
         }
 
-        $currentValue = self::value($currentQuantity, $currentAverage);
-        $incomingValue = self::value($incomingQuantity, $incomingCost);
-
-        return bcdiv(bcadd($currentValue, $incomingValue, 6), $newQuantity, 6);
+        return bcdiv($inventoryValue, $quantity, 6);
     }
 }

@@ -23,4 +23,13 @@ class IndonesiaFormatterTest extends TestCase
 
         $this->assertSame('22 Okt 2026, 08:30 WIB', $formatter->dateTime($utcDateTime));
     }
+
+    public function test_formats_decimal_quantity_without_float_conversion(): void
+    {
+        $formatter = new IndonesiaFormatter;
+
+        $this->assertSame('1.234.567,125', $formatter->quantity('1234567.125'));
+        $this->assertSame('-12,5', $formatter->quantity('-12.500'));
+        $this->assertSame('0', $formatter->quantity('0.000'));
+    }
 }

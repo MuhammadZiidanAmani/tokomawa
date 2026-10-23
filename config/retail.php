@@ -7,4 +7,7 @@ return [
     'pos_requires_online_connection' => true,
     'costing_method' => 'moving_weighted_average',
     'allow_negative_stock' => false,
+    'purchasing' => [
+        'require_supplier_product_mapping' => false,
+    ],
 ];

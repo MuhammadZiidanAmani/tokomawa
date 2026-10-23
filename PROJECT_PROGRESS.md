@@ -1,9 +1,9 @@
 # Project Progress — Retail Management System
 
-**Tanggal pembaruan:** 22 Oktober 2026  
-**Tahap aktif:** M0.3 — COMPLETED; berhenti sebelum M1.1
-**Status implementasi aplikasi:** M0.3 COMPLETED pada MariaDB 11.8.8/InnoDB; migration, CRUD master, RBAC, audit, regression suite, schema audit, Pint, Blade compile, dan frontend build lulus
-**Gate:** M1.1 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
+**Tanggal pembaruan:** 23 Oktober 2026
+**Tahap aktif:** M1.1 — COMPLETED; berhenti sebelum M1.2
+**Status implementasi aplikasi:** M1.1 COMPLETED pada MariaDB 11.8.8/InnoDB; immutable stock ledger, balance projection, Moving Weighted Average, opening balance approval, reconciliation, full regression suite, dan concurrency dua proses lulus
+**Gate:** M1.2 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
 
 ## 1. Ringkasan status
 
@@ -19,9 +19,10 @@
 | Implementasi M0.1 | **COMPLETED** | Session auth, modular foundation, Livewire dashboard, design system, user command, audit regresi, dan quality gate telah lulus. |
 | Implementasi M0.2 | **COMPLETED** | Delapan migration development, 59 test/325 assertion, audit 24 tabel InnoDB, dan concurrency dua proses untuk sequence/idempotency lulus pada MariaDB. |
 | Implementasi M0.3 | **COMPLETED** | Master katalog, supplier, unit/konversi, lokasi, harga efektif, dan pajak configurable telah berjalan; 82 test/578 assertion lulus. |
-| Implementasi transaksi bisnis | Belum dimulai | Inventory ledger, purchasing, POS, keuangan, dan laporan tetap terkunci di milestone berikutnya. |
+| Implementasi M1.1 | **COMPLETED** | Stock ledger immutable, saldo per gudang/batch, MWA, opening balance approval, transfer internal, dan rekonsiliasi lulus 101 test/760 assertion serta concurrency dua proses. |
+| Implementasi transaksi lanjutan | Belum dimulai | Purchase Order, Goods Receipt, POS, keuangan, dan milestone sesudah M1.1 tetap belum dimulai. |
 
-**Interpretasi progres:** planning baseline serta M0.1–M0.3 selesai. Fondasi organisasi/reliabilitas dan master data retail telah tervalidasi pada MariaDB/InnoDB. Tidak ada modul stok, purchasing, POS, atau keuangan yang dimulai; M1.1 menunggu instruksi pengguna.
+**Interpretasi progres:** planning baseline, M0.1–M0.3, dan M1.1 selesai. Fondasi organisasi/reliabilitas, master data, serta ledger dan proyeksi stok telah tervalidasi pada MariaDB/InnoDB. Purchasing, Goods Receipt, POS, dan keuangan belum dimulai; M1.2 menunggu instruksi pengguna.
 
 ## 2. Baseline lingkungan yang terverifikasi
 
@@ -93,8 +94,13 @@
 | Full regression suite setelah M0.3 | Lulus — 82 test, 578 assertion, 0 failure pada `retail_testing` |
 | Regression concurrency M0.2 setelah M0.3 | Lulus — 2 test, 23 assertion; dua proses independen untuk sequence dan idempotency tetap aman |
 | Quality gate M0.3 | Lulus — Laravel Pint, Blade cache, 36 route master, dan Vite/Tailwind production build |
+| Migration M1.1 development | Lulus — migration forward-only batch 3 `Ran`; seluruh 13 migration berstatus `Ran` dan dry-run berikutnya `Nothing to migrate` |
+| Targeted inventory dan schema suite | Lulus — 20 test, 127 assertion untuk posting, MWA, transfer, rollback, immutable ledger, rekonsiliasi, HTTP/RBAC/branch isolation, batch, dan skema MariaDB |
+| Concurrency stok terakhir M1.1 | Lulus — 1 test, 10 assertion; dua proses PHP independen memperebutkan satu unit, tepat satu berhasil dan saldo tidak pernah negatif |
+| Full regression suite setelah M1.1 | Lulus — 101 test, 760 assertion, 0 failure pada `retail_testing` |
+| Quality gate M1.1 | Lulus — Laravel Pint, Blade cache, 8 route persediaan, dan Vite/Tailwind production build |
 
-Catatan: bukti terbaru membuktikan acceptance M0.1, M0.2, dan M0.3; belum membuktikan modul transaksi M1.x.
+Catatan: bukti terbaru membuktikan acceptance M0.1, M0.2, M0.3, dan M1.1; belum membuktikan purchasing, Goods Receipt, POS, atau keuangan.
 
 ## 5. Artefak yang dibuat/diubah pada tahap awal
 
@@ -152,7 +158,7 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 | M0.1 Baseline teknis, modular structure, auth, design system | **COMPLETED** | Audit final: 21 test/86 assertion lulus, build lulus, migration additive ran, auth/UI berfungsi. |
 | M0.2 Organization, RBAC, approval, audit, idempotency, sequence | **COMPLETED** | Migration/full suite/schema audit/concurrency lulus pada MariaDB/InnoDB; bukti final tercatat pada bagian 16. |
 | M0.3 Master/catalog/supplier/pricing/tax | **COMPLETED** | Empat migration development `Ran`; 82 test/578 assertion, schema audit, Pint, Blade compile, dan frontend build lulus. |
-| M1.1 Stock ledger, balance, costing | **Belum dimulai** | Dependency M0.3 sudah terpenuhi, tetapi tetap terkunci sampai instruksi eksplisit **LANJUT**. |
+| M1.1 Stock ledger, balance, costing | **COMPLETED** | Migration development, 5 tabel InnoDB, 101 test/760 assertion, concurrency dua proses, Pint, Blade compile, dan frontend build lulus; bukti final pada bagian 18. |
 | M1.2 Purchase Order | Belum dimulai | Bergantung fondasi/master. |
 | M1.3 Goods receipt | Belum dimulai | Bergantung PO dan stock ledger. |
 | M1.4 Purchase invoice/AP minimum | Belum dimulai | Bergantung receipt. |
@@ -166,11 +172,11 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 
 1. MariaDB 11.8.8 dan driver PHP tersedia; aplikasi memakai akun khusus `retail_app`, bukan root, dengan scope hanya `retail_development` dan `retail_testing`.
 2. `.env` lokal diarahkan ke koneksi native Laravel `mariadb` dan `retail_development`; `phpunit.xml` mengisolasi test ke `retail_testing`; secret tidak dicatat dalam dokumen atau output aplikasi.
-3. Pengguna pertama belum dibuat pada database development karena password tidak boleh dibuat atau di-hardcode oleh agent.
+3. Database development memiliki 1 user dan 1 cabang yang sudah ada; migration M1.1 mempertahankan keduanya dan tidak membuat data transaksi contoh.
 4. `SESSION_SECURE_COOKIE=false` diperlukan untuk HTTP lokal; production HTTPS wajib mengaturnya menjadi `true`.
 5. Build memberi warning opsional `fontaine` untuk optimized font fallback, tetapi build berhasil dan aset Inter terbentuk.
 6. MFA privileged, jumlah gudang/register operasional, kebijakan final PPN/rounding, nominal approval bisnis, perangkat, dan volume masih perlu diputuskan pada milestone terkait. Struktur pajak effective-dated sudah tersedia tanpa tarif hardcoded; DEC-006 tetap OPEN.
-7. Repository Git sudah diinisialisasi, tetapi baseline proyek belum memiliki commit dan seluruh file masih berstatus untracked; pembuatan commit tetap menjadi keputusan pengguna dan bukan blocker acceptance M0.1.
+7. Repository Git sudah memiliki riwayat lokal; perubahan M1.1 belum dibuatkan commit karena pembuatan commit tetap menjadi keputusan pengguna.
 
 ## 9. Protokol pembaruan milestone
 
@@ -192,11 +198,11 @@ Next gate: STOP — menunggu LANJUT
 
 ## 10. Aksi berikutnya
 
-STOP setelah M0.3 COMPLETED. Jangan memulai M1.1 sebelum pengguna memberikan instruksi eksplisit **LANJUT**.
+STOP setelah M1.1 COMPLETED. Jangan memulai M1.2 sebelum pengguna memberikan instruksi eksplisit **LANJUT**.
 
 ## 11. Audit pembukaan M1.1 — 22 Oktober 2026
 
-**Status:** BLOCKED sebelum coding
+**Status:** SUPERSEDED — catatan ini adalah snapshot historis sebelum M0.1–M0.3 tersedia; dependency tersebut kini telah selesai dan M1.1 sudah diimplementasikan.
 
 **Pekerjaan M1.1 yang direncanakan bila dependency terpenuhi:**
 
@@ -510,3 +516,68 @@ STOP setelah M0.3 COMPLETED. Jangan memulai M1.1 sebelum pengguna memberikan ins
 - [x] Tidak ada blocker kritis tersembunyi; DEC-006 tetap dinyatakan OPEN dan tidak diklaim final.
 
 **Next gate:** STOP — M0.3 COMPLETED. Jangan memulai M1.1 sebelum instruksi eksplisit **LANJUT** dari pengguna.
+
+## 18. M1.1 — Inventory, stock ledger, balance projection, costing, dan opening balance — 23 Oktober 2026
+
+**Status:** COMPLETED — seluruh acceptance criteria M1.1 lulus pada MariaDB/InnoDB.
+
+**Fitur yang berfungsi:**
+
+- `inventory_movements` menjadi ledger posted yang immutable; update dan delete melalui model ditolak.
+- `inventory_balances` menjadi proyeksi saldo per cabang, gudang, barang, batch, dan status stok, diperbarui atomik bersama movement.
+- Incoming stock menghitung HPP Moving Weighted Average dari nilai persediaan presisi; outgoing stock mempertahankan nilai/HPP secara konsisten tanpa float.
+- Opening balance dibuat sebagai stock adjustment, meminta approval terpisah, menolak self-approval, lalu diposting tepat sekali melalui idempotency key.
+- Transfer gudang menghasilkan movement keluar/masuk atomik tanpa mengubah total kuantitas atau nilai persediaan.
+- Batch dan tanggal kedaluwarsa diwajibkan untuk barang yang dikonfigurasi memakai pelacakan tersebut.
+- Reconciliation membandingkan ledger dengan balance projection dan mendeteksi drift kuantitas maupun nilai.
+- Dashboard, saldo barang, mutasi, input/persetujuan saldo awal, detail gudang, dan rekonsiliasi tersedia dalam Bahasa Indonesia dengan empty, validation, error, permission, pagination, dan loading states.
+
+**Kontrol transaksi dan keamanan:**
+
+- Seluruh mutasi stok melewati `InventoryPostingService`; controller dan master barang tidak mengubah stok langsung.
+- Posting memakai transaction dengan bounded deadlock retry, row lock pada adjustment/balance, unique `source_key`, reusable idempotency service, audit log, dan transactional outbox.
+- Constraint/proyeksi `UNSIGNED` serta validasi domain menolak saldo negatif; kegagalan satu baris me-rollback seluruh dokumen.
+- Policy, permission, active branch context, dan lookup terscope memberikan 403 untuk permission yang kurang serta 404 untuk record lintas cabang.
+- Permission inventory ditambahkan melalui seeder idempoten: 6 permission inventory, 29 permission total; role existing disinkronkan tanpa akun atau transaksi dummy.
+
+**File/area utama:**
+
+- Domain: `app/Domain/Inventory/{Enums,Models,Services}/**`, termasuk posting, submission, approval, decimal arithmetic, dan reconciliation.
+- HTTP/security: `app/Http/Controllers/Inventory/**`, `app/Http/Requests/Inventory/**`, `app/Policies/StockAdjustmentPolicy.php`, route persediaan, provider policy, serta matriks `config/access.php`.
+- UI: `resources/views/inventory/**`, navigasi sidebar, dan stack script pada AppShell.
+- Command/data/test: `app/Console/Commands/ReconcileInventory.php`, factory inventory, migration M1.1, serta empat suite feature/schema/concurrency M1.1.
+
+**Migration dan schema:**
+
+- `2026_10_22_120000_create_m1_1_inventory_tables` membuat `inventory_batches`, `stock_adjustments`, `stock_adjustment_items`, `inventory_balances`, dan `inventory_movements` sebagai InnoDB.
+- Migration berjalan forward-only sebagai batch 3 pada `retail_development`; seluruh 13 migration berstatus `Ran`, dan dry-run sesudahnya menghasilkan `Nothing to migrate`.
+- Unique constraint kritis tersedia pada scope balance, ledger `source_key`, document/submission key, batch business key, dan nomor baris adjustment.
+- Foreign key transaksi menggunakan `RESTRICT` untuk mencegah penghapusan referensi posted; actor nullable memakai `SET NULL` bila sesuai audit history.
+- Kuantitas memakai `DECIMAL(18,3)`, unit cost/HPP `DECIMAL(18,6)`, dan nilai persediaan `DECIMAL(24,6)`; kolom proyeksi yang tidak boleh negatif memakai `UNSIGNED`.
+- Sebelum dan sesudah migration development tetap memiliki 1 user, 1 cabang, 0 produk, dan 0 data inventory; tidak ada reset, rollback, drop, atau penghapusan data development.
+
+**Pengujian dan quality gate:**
+
+- Targeted domain/HTTP/schema/formatter: 20 test, 127 assertion — PASSED.
+- Concurrency MariaDB/InnoDB: 1 test, 10 assertion — PASSED; dua proses PHP independen memperebutkan satu unit terakhir, tepat satu commit dan satu ditolak, satu movement keluar tercatat, saldo akhir nol.
+- Full regression M0.1–M1.1: 101 test, 760 assertion, 0 failure — PASSED pada `retail_testing`.
+- Laravel Pint `--dirty --format agent` — PASSED.
+- `php artisan view:cache` — PASSED; 8 route persediaan terdaftar.
+- `npm run build` — PASSED dengan Vite 8.3.5/Tailwind CSS 4; warning opsional `fontaine` tidak memengaruhi build.
+
+**Acceptance criteria final:**
+
+- [x] Posting saldo awal terjadi tepat sekali dan replay idempotency key yang sama tidak menggandakan stok.
+- [x] Kegagalan parsial me-rollback balance, movement, audit, dan status dokumen secara atomik.
+- [x] Moving Weighted Average, konversi satuan, dan nilai persediaan presisi tanpa float.
+- [x] Transfer antar gudang dalam cabang menjaga total kuantitas/nilai.
+- [x] Stok negatif ditolak, termasuk race dua proses pada stok terakhir.
+- [x] Posted ledger immutable dan unique source mencegah movement ganda.
+- [x] Rekonsiliasi bernilai nol untuk data valid dan mendeteksi projection drift.
+- [x] Approval, larangan self-approval, RBAC, branch isolation, audit log, dan outbox teruji.
+- [x] Migration development aman; schema MariaDB/InnoDB, DECIMAL, FK, dan unique constraint terverifikasi.
+- [x] Regression suite, Pint, Blade compile, route audit, dan frontend build lulus.
+
+**Batas scope:** Purchase Order, Goods Receipt, POS, Finance, dan milestone sesudah M1.1 tidak dimulai.
+
+**Next gate:** STOP — M1.1 COMPLETED. Jangan memulai M1.2 sebelum instruksi eksplisit **LANJUT** dari pengguna.

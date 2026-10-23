@@ -1,8 +1,8 @@
 # Implementation Plan — Retail Management System
 
 **Versi rencana:** 1.0  
-**Tanggal:** 22 Oktober 2026  
-**Status:** M0.1, M0.2, dan M0.3 COMPLETED pada MariaDB/InnoDB; M1.1 terkunci menunggu instruksi **LANJUT**
+**Tanggal:** 23 Oktober 2026
+**Status:** M0.1, M0.2, M0.3, dan M1.1 COMPLETED pada MariaDB/InnoDB; M1.2 terkunci menunggu instruksi **LANJUT**
 **Sumber kebenaran:** `ai/retail management/PRD_Retail_Management_System.md`, `ai/retail management/architecture.md`, dan `ai/retail management/design.md`
 
 ## 1. Tujuan dan batas rencana
@@ -271,6 +271,8 @@ Alasan urutan:
 - Rekonsiliasi ledger dan balance menghasilkan nol selisih untuk data valid.
 - HPP tidak menggunakan float dan mengikuti metode yang disahkan.
 
+**Status implementasi 23 Oktober 2026:** **COMPLETED**. Lima tabel M1.1 berjalan forward-only pada `retail_development`; stock mutation hanya melalui service atomik dengan row lock, source unik, idempotency, audit, dan outbox. Moving Weighted Average memakai aritmetika BCMath/DECIMAL, stok negatif ditolak, ledger posted immutable, serta rekonsiliasi tersedia. Targeted suite lulus 20 test/127 assertion, concurrency dua proses lulus 1 test/10 assertion, dan full regression suite lulus 101 test/760 assertion pada `retail_testing`. Pint, Blade compile, delapan route persediaan, dan frontend build lulus.
+
 #### M1.2 — Purchase Order
 
 **Tujuan:** menyediakan lifecycle PO tanpa efek stok atau keuangan.
@@ -418,4 +420,4 @@ Sebuah fitur hanya boleh dinyatakan selesai bila:
 
 ## 11. Titik mulai yang diizinkan berikutnya
 
-M0.3 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development, CRUD master, RBAC/branch isolation, audit, schema constraints, presisi desimal, full regression suite, Blade compile, Pint, dan frontend build telah berhasil. DEC-006 tetap OPEN dan tidak ada tarif PPN yang di-hardcode. **STOP:** M1.1 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.
+M1.1 telah lulus pada MariaDB/InnoDB menggunakan database `retail_development` dan `retail_testing` yang terpisah. Migration development forward-only, immutable ledger, balance projection, Moving Weighted Average, approval saldo awal, branch isolation/RBAC, audit/outbox, schema constraints, rollback/idempotency, concurrency dua proses, full regression suite, Blade compile, Pint, dan frontend build telah berhasil. DEC-002 dan DEC-003 tetap berlaku. **STOP:** M1.2 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.

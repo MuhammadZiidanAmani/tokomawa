@@ -59,9 +59,9 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
             $table->foreignId('unit_id')->constrained('units')->restrictOnDelete();
             $table->foreignId('inventory_batch_id')->nullable()->constrained('inventory_batches')->restrictOnDelete();
-            $table->decimal('quantity', 18, 3);
-            $table->decimal('base_quantity', 18, 3);
-            $table->decimal('unit_cost', 18, 6)->nullable();
+            $table->decimal('quantity', 18, 3)->unsigned();
+            $table->decimal('base_quantity', 18, 3)->unsigned();
+            $table->decimal('unit_cost', 18, 6)->unsigned()->nullable();
             $table->string('stock_status', 32)->default('sellable');
             $table->text('notes')->nullable();
             $table->timestamps();
@@ -78,10 +78,10 @@ return new class extends Migration
             $table->foreignId('inventory_batch_id')->nullable()->constrained('inventory_batches')->restrictOnDelete();
             $table->string('batch_scope', 26)->default('NO-BATCH');
             $table->string('stock_status', 32)->default('sellable');
-            $table->decimal('qty_on_hand', 18, 3)->default(0);
-            $table->decimal('qty_reserved', 18, 3)->default(0);
-            $table->decimal('avg_unit_cost', 18, 6)->default(0);
-            $table->decimal('inventory_value', 24, 6)->default(0);
+            $table->decimal('qty_on_hand', 18, 3)->unsigned()->default(0);
+            $table->decimal('qty_reserved', 18, 3)->unsigned()->default(0);
+            $table->decimal('avg_unit_cost', 18, 6)->unsigned()->default(0);
+            $table->decimal('inventory_value', 24, 6)->unsigned()->default(0);
             $table->unsignedBigInteger('version')->default(0);
             $table->timestamps();
             $table->unique(
@@ -104,8 +104,8 @@ return new class extends Migration
             $table->string('movement_type', 40);
             $table->string('direction', 3);
             $table->decimal('qty_delta', 18, 3);
-            $table->decimal('qty_after', 18, 3);
-            $table->decimal('unit_cost_snapshot', 18, 6);
+            $table->decimal('qty_after', 18, 3)->unsigned();
+            $table->decimal('unit_cost_snapshot', 18, 6)->unsigned();
             $table->decimal('value_delta', 24, 6);
             $table->string('source_type', 80);
             $table->string('source_id', 80);
