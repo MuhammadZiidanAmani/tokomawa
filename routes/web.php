@@ -16,6 +16,9 @@ use App\Http\Controllers\Purchasing\GoodsReceiptController;
 use App\Http\Controllers\Purchasing\PurchaseInvoiceController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\PurchaseOrderWorkflowController;
+use App\Http\Controllers\Sales\CashShiftController;
+use App\Http\Controllers\Sales\PosController;
+use App\Http\Controllers\Sales\SaleController;
 use App\Http\Controllers\Settings\AccessAssignmentController;
 use App\Http\Controllers\Settings\ApprovalLimitController;
 use App\Http\Controllers\Settings\BranchController;
@@ -126,6 +129,23 @@ Route::middleware('auth')->group(function (): void {
             Route::post('/faktur-pembelian/{purchase_invoice}/posting', [PurchaseInvoiceController::class, 'post'])->name('purchase-invoices.post');
         });
         Route::get('/keuangan/hutang-supplier', [AccountsPayableController::class, 'index'])->middleware('permission:accounts_payable.view')->name('accounts-payable.index');
+
+        Route::prefix('kasir')->group(function (): void {
+            Route::get('/buka-shift', [CashShiftController::class, 'create'])
+                ->middleware('permission:cash_shifts.open')->name('cash-shifts.create');
+            Route::post('/buka-shift', [CashShiftController::class, 'store'])
+                ->middleware('permission:cash_shifts.open')->name('cash-shifts.store');
+            Route::get('/pos', [PosController::class, 'index'])
+                ->middleware('permission:pos.access')->name('pos.index');
+            Route::get('/pos/cari', [PosController::class, 'lookup'])
+                ->middleware('permission:pos.access')->name('pos.lookup');
+            Route::post('/pos/checkout', [PosController::class, 'checkout'])
+                ->middleware('permission:sales.checkout')->name('pos.checkout');
+            Route::get('/pos/status', [PosController::class, 'status'])
+                ->middleware('permission:sales.checkout')->name('pos.status');
+            Route::get('/transaksi/{sale}', [SaleController::class, 'show'])
+                ->middleware('permission:sales.view')->name('sales.show');
+        });
 
         Route::prefix('pembelian')
             ->name('purchasing.')

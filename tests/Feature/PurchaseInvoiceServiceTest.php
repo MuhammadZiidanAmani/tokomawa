@@ -10,6 +10,7 @@ use App\Domain\Catalog\Models\Product;
 use App\Domain\Catalog\Models\Unit;
 use App\Domain\Organization\Models\Branch;
 use App\Domain\Organization\Models\Warehouse;
+use App\Domain\Pricing\Models\TaxRule;
 use App\Domain\Purchasing\Enums\GoodsReceiptStatus;
 use App\Domain\Purchasing\Enums\PurchaseOrderStatus;
 use App\Domain\Purchasing\Models\GoodsReceipt;
@@ -59,6 +60,36 @@ class PurchaseInvoiceServiceTest extends TestCase
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('melebihi penerimaan');
         $service->post($second, $actor, $branch, (string) Str::uuid());
+    }
+
+    public function test_supplier_number_is_normalized_and_tax_snapshot_blocks_posting_until_decision(): void
+    {
+        [$branch, $actor, $supplier, $item] = $this->context();
+        $service = app(PurchaseInvoiceService::class);
+        $first = $service->createDraft($actor, $branch, $this->payload($supplier, $item, 'INV-001', 'credit'));
+        $this->assertDatabaseHas('audit_logs', ['action' => 'purchase_invoice.created', 'entity_id' => $first->public_id]);
+        try {
+            $service->createDraft($actor, $branch, $this->payload($supplier, $item, 'inv 001', 'credit'));
+            $this->fail('Nomor faktur ternormalisasi dapat diduplikasi.');
+        } catch (DomainException $exception) {
+            $this->assertStringContainsString('sudah pernah digunakan', $exception->getMessage());
+        }
+
+        [$branch2, $actor2, $supplier2, $item2] = $this->context();
+        $taxRule = TaxRule::factory()->create(['code' => 'PPN-CFG', 'rate' => '11.0000', 'created_by' => $actor2->id]);
+        $payload = $this->payload($supplier2, $item2, 'INV-TAX', 'credit');
+        $payload['items'][0]['tax_rule_id'] = $taxRule->id;
+        $taxed = $service->createDraft($actor2, $branch2, $payload);
+        $taxRule->update(['rate' => '12.0000']);
+        $this->assertSame('11.0000', $taxed->items()->sole()->tax_rate_snapshot);
+        try {
+            $service->post($taxed, $actor2, $branch2, (string) Str::uuid());
+            $this->fail('Faktur berpajak terposting sebelum DEC-006 disahkan.');
+        } catch (DomainException $exception) {
+            $this->assertStringContainsString('DEC-006', $exception->getMessage());
+        }
+        $this->assertSame(PurchaseInvoiceStatus::Draft, $taxed->fresh()->status);
+        $this->assertDatabaseMissing('ap_entries', ['purchase_invoice_id' => $taxed->id]);
     }
 
     /** @return array{Branch,User,Supplier,GoodsReceiptItem} */

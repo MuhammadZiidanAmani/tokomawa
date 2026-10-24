@@ -1,8 +1,8 @@
 # Implementation Plan — Retail Management System
 
 **Versi rencana:** 1.0  
-**Tanggal:** 23 Oktober 2026
-**Status:** M0.1, M0.2, M0.3, M1.1, M1.2, dan M1.3 COMPLETED pada MariaDB/InnoDB; M1.4 terkunci menunggu instruksi **LANJUT**
+**Tanggal:** 24 Oktober 2026
+**Status:** M0.1–M1.4 COMPLETED pada MariaDB/InnoDB; M1.5 terkunci menunggu instruksi **LANJUT**
 **Sumber kebenaran:** `ai/retail management/PRD_Retail_Management_System.md`, `ai/retail management/architecture.md`, dan `ai/retail management/design.md`
 
 ## 1. Tujuan dan batas rencana
@@ -305,6 +305,8 @@ Alasan urutan:
 
 #### M1.4 — Purchase invoice tunai/kredit dan AP minimum
 
+**Status implementasi 24 Oktober 2026:** **COMPLETED**. Lima tabel M1.4 berjalan forward-only sebagai batch 6 pada `retail_development`; invoice tunai/kredit, alokasi receipt, AP ledger immutable, settlement tunai minimum, audit/outbox, RBAC, idempotency, reconciliation, dan concurrency dua proses telah tervalidasi. Targeted regression lulus 21 test/127 assertion dan full suite lulus 142 test/1.192 assertion pada `retail_testing`; Pint, Blade compile, schema/route audit, serta production build lulus. DEC-006 tetap OPEN sehingga posting dengan pajak ditahan secara eksplisit.
+
 **Tujuan:** mencatat invoice dan kewajiban tanpa menduplikasi stok receipt.
 
 **Tabel:** `purchase_invoices`, `purchase_invoice_items`, receipt-invoice allocations bila diperlukan, `ap_entries`, payment record minimum untuk invoice tunai.
@@ -426,4 +428,4 @@ Sebuah fitur hanya boleh dinyatakan selesai bila:
 
 ## 11. Titik mulai yang diizinkan berikutnya
 
-M1.3 telah lulus pada MariaDB/InnoDB. Draft Goods Receipt, posting inventory atomik, penerimaan parsial/penuh, outstanding PO, batch/lot/expiry, branch dan warehouse scope, RBAC, audit/outbox, rollback/idempotency, serta concurrency dua proses telah tervalidasi pada `retail_testing`. Migration development telah berjalan forward-only sebagai batch 5 pada `retail_development`; kedua tabel Goods Receipt InnoDB dan seluruh data lama tetap utuh. DEC-014 tetap OPEN dan default aman menolak over-receipt. **STOP:** M1.4 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.
+M1.4 telah lulus pada MariaDB/InnoDB. Invoice tunai/kredit, alokasi receipt, AP ledger, outstanding, settlement tunai 1:1, audit/outbox, branch scope, rollback/idempotency, serta concurrency dua proses telah tervalidasi pada `retail_testing`. Migration development berjalan forward-only sebagai batch 6; lima tabel M1.4 memakai InnoDB dan data lama tetap utuh. DEC-006 tetap OPEN dan faktur yang memerlukan pajak tidak dapat diposting. **STOP:** M1.5 tidak boleh dimulai sebelum instruksi eksplisit **LANJUT**.

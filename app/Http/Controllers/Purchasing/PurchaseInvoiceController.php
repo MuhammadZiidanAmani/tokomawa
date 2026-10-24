@@ -70,7 +70,7 @@ class PurchaseInvoiceController extends Controller
         abort_if($context->get()?->id !== $purchaseInvoice->branch_id, 404);
         Gate::authorize('update', $purchaseInvoice);
 
-        return view('purchasing.purchase-invoices.form', [...$this->formData($purchaseInvoice->branch_id), 'invoice' => $purchaseInvoice->load('allocations')]);
+        return view('purchasing.purchase-invoices.form', [...$this->formData($purchaseInvoice->branch_id), 'invoice' => $purchaseInvoice->load('allocations.invoiceItem')]);
     }
 
     public function update(UpsertPurchaseInvoiceRequest $request, PurchaseInvoice $purchaseInvoice, CurrentBranchContext $context, PurchaseInvoiceService $service): RedirectResponse

@@ -1,9 +1,9 @@
 # Project Progress — Retail Management System
 
-**Tanggal pembaruan:** 23 Oktober 2026
-**Tahap aktif:** M1.3 — COMPLETED; berhenti sebelum M1.4
-**Status implementasi aplikasi:** M1.3 COMPLETED dan ter-deploy lokal pada MariaDB 11.8/InnoDB; migration batch 5 `Ran` pada `retail_development`, sedangkan full regression dan concurrency dua proses lulus pada `retail_testing`
-**Gate:** M1.4 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
+**Tanggal pembaruan:** 24 Oktober 2026
+**Tahap aktif:** M1.4 — COMPLETED; berhenti sebelum M1.5
+**Status implementasi aplikasi:** M1.4 COMPLETED dan ter-deploy lokal pada MariaDB 11.8/InnoDB; migration batch 6 `Ran` pada `retail_development`, sedangkan full regression dan concurrency dua proses lulus pada `retail_testing`
+**Gate:** M1.5 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**
 
 ## 1. Ringkasan status
 
@@ -22,8 +22,9 @@
 | Implementasi M1.1 | **COMPLETED** | Stock ledger immutable, saldo per gudang/batch, MWA, opening balance approval, transfer internal, dan rekonsiliasi lulus 101 test/760 assertion serta concurrency dua proses. |
 | Implementasi M1.2 | **COMPLETED** | Purchase Order draft/workflow, snapshot, approval limit, audit, idempotency, dan nomor PO concurrency-safe lulus 122 test/952 assertion full suite. |
 | Implementasi M1.3 | **COMPLETED** | Draft dan posting Goods Receipt parsial/penuh, outstanding PO, batch/lot/expiry, RBAC, audit, idempotency, serta concurrency telah lulus pada MariaDB/InnoDB. |
+| Implementasi M1.4 | **COMPLETED** | Faktur tunai/kredit, alokasi receipt, AP ledger, outstanding, settlement tunai minimum, rekonsiliasi, RBAC, audit, idempotency, dan concurrency telah lulus. |
 
-**Interpretasi progres:** planning baseline, M0.1–M0.3, M1.1, M1.2, dan M1.3 selesai. Fondasi organisasi/reliabilitas, master data, ledger/proyeksi stok, Purchase Order, serta Goods Receipt telah tervalidasi pada MariaDB/InnoDB. Purchase Invoice/AP, POS, dan keuangan belum dimulai; M1.4 menunggu instruksi pengguna.
+**Interpretasi progres:** planning baseline dan M0.1–M1.4 selesai. Fondasi, master data, inventory, Purchase Order, Goods Receipt, Purchase Invoice, dan AP minimum telah tervalidasi pada MariaDB/InnoDB. POS, shift kasir, pembayaran hutang lanjutan, dan milestone berikutnya belum dimulai; M1.5 menunggu instruksi pengguna.
 
 ## 2. Baseline lingkungan yang terverifikasi
 
@@ -115,6 +116,13 @@
 | Full regression suite setelah M1.3 | Lulus — 134 test, 1.109 assertion, 0 failure pada `retail_testing` |
 | Schema audit M1.3 | Lulus — 2 tabel InnoDB, 8 unique constraint bernama, 9 foreign key transaksi `RESTRICT`, dan kolom qty/uang/cost bertipe `DECIMAL` |
 | Quality gate M1.3 | Lulus — Laravel Pint, Blade cache, audit 8 route Goods Receipt, dan Vite/Tailwind production build |
+| Migration M1.4 development | Lulus — dry-run hanya create/FK/index; migration forward-only batch 6 `Ran`; dry-run berikutnya `Nothing to migrate` |
+| Audit schema M1.4 | Lulus — 5/5 tabel InnoDB, 21 foreign key, 13 unique constraint non-primary, serta nominal/qty fixed DECIMAL |
+| Targeted regression M1.4 | Lulus — 21 test, 127 assertion untuk invoice/AP, schema, HTTP, M1.2–M1.3, dan concurrency |
+| Concurrency M1.4 | Lulus — dua proses independen menagih qty receipt terakhir; tepat satu posting berhasil, satu AP charge tercipta, tanpa inventory movement |
+| Full regression suite setelah M1.4 | Lulus — 142 test, 1.192 assertion, 0 failure pada `retail_testing` |
+| Quality gate M1.4 | Lulus — Laravel Pint, Blade cache, audit 8 route M1.4, dan Vite/Tailwind production build |
+| RBAC development M1.4 | Lulus — `AccessControlSeeder` idempoten dijalankan; 46 permission tersedia tanpa membuat akun atau transaksi bisnis |
 
 Catatan: bukti terbaru membuktikan acceptance M0.1, M0.2, M0.3, M1.1, M1.2, dan M1.3; belum membuktikan Purchase Invoice/AP, POS, atau keuangan.
 
@@ -179,7 +187,7 @@ Tidak ada migration domain, model retail, controller, action, service, route fit
 | M1.1 Stock ledger, balance, costing | **COMPLETED** | Migration development, 5 tabel InnoDB, 101 test/760 assertion, concurrency dua proses, Pint, Blade compile, dan frontend build lulus; bukti final pada bagian 18. |
 | M1.2 Purchase Order | **COMPLETED** | Dua tabel InnoDB, 21 test/136 assertion targeted, 122 test/952 assertion full suite, concurrency dua proses, Pint/Blade/build lulus; bukti pada bagian 19. |
 | M1.3 Goods receipt | **COMPLETED** | Targeted 12 test/117 assertion, full regression 134 test/1.109 assertion, schema audit, dan concurrency dua proses lulus pada MariaDB/InnoDB. |
-| M1.4 Purchase invoice/AP minimum | Belum dimulai | Bergantung receipt. |
+| M1.4 Purchase invoice/AP minimum | **COMPLETED** | Lima tabel InnoDB, targeted 21 test/127 assertion, full suite 142 test/1.192 assertion, concurrency dua proses, Pint/Blade/build lulus. |
 | M1.5 Shift/POS cash | Belum dimulai | Bergantung stock ledger, pricing dasar, register. |
 | M1.6 Receipt/report/EOD minimum | Belum dimulai | Bergantung invoice dan POS cash. |
 | F2 Operations/reversal | Belum dimulai | Dikerjakan satu milestone per instruksi. |
@@ -216,7 +224,7 @@ Next gate: STOP — menunggu LANJUT
 
 ## 10. Aksi berikutnya
 
-STOP setelah M1.3 COMPLETED. M1.4 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**.
+STOP setelah M1.4 COMPLETED. M1.5 tetap terkunci sampai pengguna memberikan instruksi eksplisit **LANJUT**.
 
 ## 11. Audit pembukaan M1.1 — 22 Oktober 2026
 
@@ -749,3 +757,58 @@ STOP setelah M1.3 COMPLETED. M1.4 tetap terkunci sampai pengguna memberikan inst
 **Keputusan terbuka:** DEC-014 tetap OPEN. Default aman M1.3 menolak kuantitas di atas outstanding; tolerance/approval hanya dapat ditambahkan setelah kebijakan procurement disahkan.
 
 **Next gate:** STOP — M1.3 COMPLETED. Jangan memulai M1.4 atau milestone lain sebelum instruksi eksplisit **LANJUT** dari pengguna.
+
+## 21. M1.4 — Purchase Invoice tunai/kredit dan AP minimum — 24 Oktober 2026
+
+**Status:** COMPLETED
+
+**Fitur dan kontrol utama:**
+
+- Draft faktur dari satu atau beberapa Goods Receipt terposting, nomor internal transaction-safe, normalisasi nomor supplier, snapshot supplier/barang/satuan/harga, diskon, struktur snapshot pajak, dan selisih harga receipt-versus-invoice.
+- Alokasi per item receipt memakai kuantitas dasar presisi. Posting mengunci invoice, allocation, dan item receipt dengan urutan stabil; current locking read mencegah dua invoice menagih qty receipt terakhir yang sama.
+- Faktur kredit mencatat satu `invoice_charge` pada ledger AP serta outstanding dan jatuh tempo. Faktur tunai membuat record pembayaran 1:1, AP charge, dan `cash_settlement` atomik sehingga saldo bersih nol hanya setelah pembayaran tercatat.
+- `ap_entries` append-only, source key unik, invoice posted immutable, transaksi idempotent, bounded retry, audit log, transactional outbox, branch isolation, RBAC, dan reconciliation ledger-versus-projection.
+- Posting faktur tidak mengubah `inventory_movements`, `inventory_balances`, `purchase_order_items.received_base_quantity`, atau Goods Receipt. Pembayaran AP parsial/penuh M2.1, POS, dan payment gateway tidak dibuat.
+- DEC-006 tetap OPEN. Struktur snapshot pajak tersedia, tetapi posting yang memiliki tax rule atau nilai pajak ditahan dengan pesan validasi; tidak ada tarif/pembulatan hardcoded.
+
+**Migration dan schema:**
+
+- `2026_10_23_170304_create_m1_4_purchase_invoice_and_ap_tables` membuat `purchase_invoices`, `purchase_invoice_items`, `goods_receipt_invoice_allocations`, `purchase_invoice_cash_payments`, dan `ap_entries`.
+- Dry-run hanya berisi create table, foreign key, index, dan unique constraint. Migration berjalan forward-only sebagai batch 6 pada `retail_development`; seluruh 16 migration berstatus `Ran` dan dry-run berikutnya `Nothing to migrate`.
+- Seeder akses idempoten menyelaraskan matriks menjadi 46 permission untuk role yang ada; tidak membuat user atau transaksi contoh.
+- Audit development: 5/5 tabel memakai InnoDB, 21 foreign key, 13 unique constraint non-primary, dan seluruh uang/qty menggunakan DECIMAL.
+- Sebelum dan sesudah migration tetap terdapat 1 user/Super Admin, 1 cabang, 1 gudang, 0 PO, 0 Goods Receipt, 0 movement, dan 0 balance. Tabel M1.4 masih kosong; tidak ada reset, rollback, drop, truncate, atau perubahan data lama.
+
+**File/area utama:**
+
+- Domain `app/Domain/AccountsPayable/{Enums,Models,Services}/**`, policy Purchase Invoice, perluasan provider dan matriks permission.
+- Controller/Form Request M1.4, route faktur dan AP, navigasi sidebar, serta Blade `resources/views/purchasing/purchase-invoices/**` dan `resources/views/accounts-payable/**`.
+- Migration M1.4 dan suite service, HTTP, schema, regression, serta concurrency dua proses.
+
+**Pengujian dan quality gate:**
+
+- Targeted regression M1.2–M1.4: 21 test, 127 assertion — PASSED; M1.4 murni 8 test/43 assertion.
+- Concurrency dua proses independen pada MariaDB/InnoDB: tepat satu dari dua invoice berhasil mengambil outstanding receipt terakhir; hasil akhir satu invoice posted, satu AP charge, dan nol inventory movement — PASSED.
+- Full regression M0.1–M1.4: 142 test, 1.192 assertion, 0 failure — PASSED pada `retail_testing`.
+- Laravel Pint — PASSED; Blade cache — PASSED; route audit — 7 route faktur + 1 route hutang; Vite/Tailwind production build — PASSED.
+
+**Temuan dan perbaikan:**
+
+1. Percobaan concurrency awal menunjukkan kedua proses dapat membaca agregat allocation dari snapshot `REPEATABLE-READ`. Query diubah menjadi current locking read atas allocation posted setelah receipt item dikunci; uji ulang dua proses lulus.
+2. Nama foreign key allocation otomatis melebihi batas identifier MariaDB. Migration memakai nama FK eksplisit yang pendek dan schema audit lulus.
+3. Regression M1.2/M1.3 sebelumnya mengharapkan tabel invoice/AP belum ada. Assertion diperbarui menjadi verifikasi tabel ada tetapi tetap kosong setelah PO/receipt, sehingga invariant “tidak ada efek AP” tetap diuji secara benar.
+4. Settlement tunai M1.4 adalah record pembayaran supplier minimum yang terikat 1:1 ke invoice; belum merupakan cash drawer/GL dan tidak diperluas menjadi pembayaran hutang parsial M2.1.
+
+**Acceptance criteria:**
+
+- [x] Draft dan edit faktur tunai/kredit dari receipt terposting tersedia dengan snapshot serta total presisi.
+- [x] Nomor faktur supplier unik per supplier; nomor dokumen internal memakai sequence aman.
+- [x] Faktur kredit membentuk AP/outstanding tepat sekali; faktur tunai memiliki payment record dan saldo AP bersih nol.
+- [x] Idempotency, rollback atomik, source uniqueness, immutable ledger/document, audit, dan outbox diterapkan.
+- [x] Over-allocation dan race dua proses ditolak tanpa duplikasi invoice charge.
+- [x] Posting faktur tidak mengubah stok, receipt, atau received quantity PO.
+- [x] RBAC, branch isolation, validation tanggal, UI Indonesia, search/filter/pagination/empty/error/loading state tersedia.
+- [x] Schema audit, targeted/full tests, Pint, Blade compile, route audit, dan frontend build lulus.
+- [x] DEC-006 tetap OPEN dan posting faktur berpajak ditahan secara eksplisit.
+
+**Next gate:** STOP — M1.4 COMPLETED. Jangan memulai M1.5, M2.1, POS, atau milestone lain sebelum instruksi eksplisit **LANJUT**.

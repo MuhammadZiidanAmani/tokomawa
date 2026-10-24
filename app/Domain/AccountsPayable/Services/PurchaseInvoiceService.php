@@ -11,6 +11,7 @@ use App\Domain\AccountsPayable\Models\GoodsReceiptInvoiceAllocation;
 use App\Domain\AccountsPayable\Models\PurchaseInvoice;
 use App\Domain\AccountsPayable\Models\PurchaseInvoiceCashPayment;
 use App\Domain\Organization\Models\Branch;
+use App\Domain\Pricing\Models\TaxRule;
 use App\Domain\Purchasing\Enums\GoodsReceiptStatus;
 use App\Domain\Purchasing\Models\GoodsReceiptItem;
 use App\Domain\Shared\Services\DocumentNumberService;
@@ -167,8 +168,10 @@ class PurchaseInvoiceService
             $lineTax = bcadd((string) ($line['tax_amount'] ?? '0'), '0', 2);
             if (bccomp($base, '0', 3) <= 0 || bccomp($lineDiscount, $lineSubtotal, 2) > 0) {
                 throw new DomainException('Kuantitas atau diskon item tidak valid.');
-            } $lineTotal = bcadd(bcsub($lineSubtotal, $lineDiscount, 2), $lineTax, 2);
-            $items[] = ['line_number' => $index + 1, 'product_id' => $receipt->product_id, 'unit_id' => $receipt->unit_id, 'product_sku_snapshot' => $receipt->product_sku_snapshot, 'product_name_snapshot' => $receipt->product_name_snapshot, 'unit_code_snapshot' => $receipt->unit_code_snapshot, 'unit_name_snapshot' => $receipt->unit_name_snapshot, 'unit_symbol_snapshot' => $receipt->unit_symbol_snapshot, 'conversion_factor' => $receipt->conversion_factor, 'quantity' => $quantity, 'base_quantity' => $base, 'receipt_unit_price_snapshot' => $receipt->unit_price_snapshot, 'invoice_unit_price' => $price, 'price_variance' => bcround(bcmul($quantity, bcsub($price, $receipt->unit_price_snapshot, 2), 5), 2), 'subtotal' => $lineSubtotal, 'discount_amount' => $lineDiscount, 'tax_amount' => $lineTax, 'line_total' => $lineTotal];
+            }
+            $lineTotal = bcadd(bcsub($lineSubtotal, $lineDiscount, 2), $lineTax, 2);
+            $taxRule = empty($line['tax_rule_id']) ? null : TaxRule::query()->findOrFail((int) $line['tax_rule_id']);
+            $items[] = ['line_number' => $index + 1, 'product_id' => $receipt->product_id, 'unit_id' => $receipt->unit_id, 'product_sku_snapshot' => $receipt->product_sku_snapshot, 'product_name_snapshot' => $receipt->product_name_snapshot, 'unit_code_snapshot' => $receipt->unit_code_snapshot, 'unit_name_snapshot' => $receipt->unit_name_snapshot, 'unit_symbol_snapshot' => $receipt->unit_symbol_snapshot, 'conversion_factor' => $receipt->conversion_factor, 'quantity' => $quantity, 'base_quantity' => $base, 'receipt_unit_price_snapshot' => $receipt->unit_price_snapshot, 'invoice_unit_price' => $price, 'price_variance' => bcround(bcmul($quantity, bcsub($price, $receipt->unit_price_snapshot, 2), 5), 2), 'subtotal' => $lineSubtotal, 'discount_amount' => $lineDiscount, 'tax_rule_id' => $taxRule?->id, 'tax_code_snapshot' => $taxRule?->code, 'tax_rate_snapshot' => $taxRule?->rate, 'tax_mode_snapshot' => $taxRule?->calculation_mode, 'tax_rounding_snapshot' => $taxRule?->rounding_mode?->value, 'tax_amount' => $lineTax, 'line_total' => $lineTotal];
             $allocations[] = ['goods_receipt_id' => $receipt->goods_receipt_id, 'goods_receipt_item_id' => $receipt->id, 'allocated_base_quantity' => $base];
             $subtotal = bcadd($subtotal, $lineSubtotal, 2);
             $discount = bcadd($discount, $lineDiscount, 2);

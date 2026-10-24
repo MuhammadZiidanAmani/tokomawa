@@ -46,6 +46,19 @@
                 Faktur Pembelian
             </a>
         @endcan
+
+        @can('pos.access')
+            <a href="{{ route('pos.index') }}" @class([
+                'mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition',
+                'bg-primary-600 text-white' => request()->routeIs('pos.*', 'cash-shifts.*', 'sales.*'),
+                'text-slate-300 hover:bg-white/10 hover:text-white' => ! request()->routeIs('pos.*', 'cash-shifts.*', 'sales.*'),
+            ])>
+                <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v12H4V4Zm3 4h10M7 12h4M6 20h12" />
+                </svg>
+                Kasir / POS
+            </a>
+        @endcan
         @can('accounts_payable.view')
             <a href="{{ route('accounts-payable.index') }}" @class(['mt-1 flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 font-semibold transition','bg-primary-600 text-white' => request()->routeIs('accounts-payable.*'),'text-slate-300 hover:bg-white/10 hover:text-white' => ! request()->routeIs('accounts-payable.*')])>
                 <svg viewBox="0 0 24 24" fill="none" class="size-5" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v12H3zM7 11h6M17 15h.01"/></svg>
@@ -108,7 +121,7 @@
 
         <div class="mt-7 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modul berikutnya</div>
         <ul class="mt-2 grid gap-1" aria-label="Modul yang belum tersedia">
-            @foreach (['Penjualan', 'Promosi', 'Laporan'] as $module)
+            @foreach (['Promosi', 'Laporan'] as $module)
                 <li class="flex min-h-10 items-center justify-between gap-2 rounded-lg px-3 py-2 text-slate-500" title="Belum tersedia pada M0.1">
                     <span>{{ $module }}</span>
                     <span class="text-[10px] uppercase tracking-wide">Nanti</span>
@@ -118,6 +131,6 @@
     </nav>
 
     <div class="border-t border-white/10 px-5 py-4 text-xs text-slate-500">
-        Fondasi sampai Faktur Pembelian & AP M1.4
+        Fondasi sampai POS Tunai M1.5
     </div>
 </div>

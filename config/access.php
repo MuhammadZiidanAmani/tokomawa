@@ -48,6 +48,12 @@ return [
         'purchase_invoices.update' => ['name' => 'Mengubah draft faktur pembelian', 'module' => 'accounts_payable'],
         'purchase_invoices.post' => ['name' => 'Memposting faktur pembelian', 'module' => 'accounts_payable'],
         'accounts_payable.view' => ['name' => 'Melihat hutang supplier', 'module' => 'accounts_payable'],
+        'cash_shifts.view' => ['name' => 'Melihat shift kasir', 'module' => 'sales'],
+        'cash_shifts.open' => ['name' => 'Membuka shift kasir', 'module' => 'sales'],
+        'cash_shifts.use_any' => ['name' => 'Menggunakan shift kasir lain', 'module' => 'sales'],
+        'pos.access' => ['name' => 'Membuka POS', 'module' => 'sales'],
+        'sales.checkout' => ['name' => 'Memposting penjualan tunai', 'module' => 'sales'],
+        'sales.view' => ['name' => 'Melihat transaksi penjualan', 'module' => 'sales'],
     ],
 
     'roles' => [
@@ -68,6 +74,7 @@ return [
                 'goods_receipts.view', 'goods_receipts.create', 'goods_receipts.update',
                 'goods_receipts.post', 'goods_receipts.cancel',
                 'purchase_invoices.view', 'purchase_invoices.create', 'purchase_invoices.update', 'purchase_invoices.post', 'accounts_payable.view',
+                'cash_shifts.view', 'cash_shifts.open', 'cash_shifts.use_any', 'pos.access', 'sales.checkout', 'sales.view',
             ],
         ],
         'purchasing' => ['name' => 'Purchasing', 'permissions' => [
@@ -86,6 +93,7 @@ return [
         ]],
         'cashier' => ['name' => 'Kasir', 'permissions' => [
             'approvals.request', 'master.view', 'catalog.view', 'pricing.view', 'tax.view',
+            'cash_shifts.view', 'cash_shifts.open', 'pos.access', 'sales.checkout', 'sales.view',
         ]],
         'finance' => ['name' => 'Finance', 'permissions' => [
             'approvals.view', 'approvals.request', 'master.view', 'catalog.view', 'suppliers.view',
@@ -94,6 +102,7 @@ return [
             'purchase_orders.view',
             'goods_receipts.view',
             'purchase_invoices.view', 'purchase_invoices.create', 'purchase_invoices.update', 'purchase_invoices.post', 'accounts_payable.view',
+            'cash_shifts.view', 'sales.view',
         ]],
         'marketing' => ['name' => 'Marketing', 'permissions' => [
             'approvals.view', 'approvals.request', 'master.view', 'catalog.view', 'pricing.view', 'pricing.manage', 'tax.view',

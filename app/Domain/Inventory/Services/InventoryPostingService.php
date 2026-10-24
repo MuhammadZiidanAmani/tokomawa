@@ -175,6 +175,85 @@ class InventoryPostingService
         ]);
     }
 
+    public function issueSale(
+        Branch $branch,
+        Warehouse $warehouse,
+        Product $product,
+        ?InventoryBatch $batch,
+        string $baseQuantity,
+        string $sourceId,
+        string $sourceLineId,
+        CarbonInterface $occurredAt,
+        User $actor,
+        string $idempotencyKey,
+    ): InventoryMovement {
+        if (DB::transactionLevel() < 1) {
+            throw new LogicException('Posting penjualan inventory wajib berada di dalam transaksi database.');
+        }
+        if ($warehouse->branch_id !== $branch->getKey()) {
+            throw new DomainException('Gudang penjualan tidak berada pada cabang yang sama.');
+        }
+        if ($batch !== null && ($batch->branch_id !== $branch->getKey() || $batch->product_id !== $product->getKey())) {
+            throw new DomainException('Batch penjualan tidak sesuai dengan cabang atau barang.');
+        }
+
+        $quantity = InventoryDecimal::quantity($baseQuantity);
+        if (bccomp($quantity, '0', 3) <= 0) {
+            throw new DomainException('Kuantitas penjualan harus lebih dari nol.');
+        }
+
+        $balance = $this->lockBalanceScope(
+            $branch->getKey(),
+            $warehouse->getKey(),
+            $product->getKey(),
+            $batch,
+            'sellable',
+        );
+        $available = bcsub($balance->qty_on_hand, $balance->qty_reserved, 3);
+        if (bccomp($available, $quantity, 3) < 0) {
+            throw new DomainException("Stok tersedia {$available}; permintaan {$quantity}.");
+        }
+
+        $unitCost = InventoryDecimal::cost($balance->avg_unit_cost);
+        $newQuantity = bcsub($balance->qty_on_hand, $quantity, 3);
+        $valueMagnitude = InventoryDecimal::value($quantity, $unitCost);
+        $valueDelta = '-'.$valueMagnitude;
+        $newValue = bccomp($newQuantity, '0', 3) === 0
+            ? '0.000000'
+            : bcadd($balance->inventory_value, $valueDelta, 6);
+        $newAverage = InventoryDecimal::averageFromValue($newValue, $newQuantity);
+        $balance->update([
+            'qty_on_hand' => $newQuantity,
+            'avg_unit_cost' => $newAverage,
+            'inventory_value' => $newValue,
+            'version' => $balance->version + 1,
+        ]);
+
+        return InventoryMovement::query()->create([
+            'branch_id' => $branch->getKey(),
+            'warehouse_id' => $warehouse->getKey(),
+            'product_id' => $product->getKey(),
+            'inventory_batch_id' => $batch?->getKey(),
+            'batch_scope' => $balance->batch_scope,
+            'stock_status' => 'sellable',
+            'movement_type' => 'sale',
+            'direction' => 'out',
+            'qty_delta' => '-'.$quantity,
+            'qty_after' => $newQuantity,
+            'unit_cost_snapshot' => $unitCost,
+            'value_delta' => $valueDelta,
+            'source_type' => 'sale',
+            'source_id' => $sourceId,
+            'source_line_id' => $sourceLineId,
+            'source_key' => "sale:{$sourceLineId}:out:{$warehouse->getKey()}",
+            'idempotency_key' => $idempotencyKey,
+            'occurred_at' => $occurredAt,
+            'posted_at' => now(),
+            'created_by' => $actor->getKey(),
+            'created_at' => now(),
+        ]);
+    }
+
     private function postItem(
         StockAdjustment $adjustment,
         StockAdjustmentItem $item,

@@ -14,15 +14,19 @@ use App\Domain\Pricing\Models\PriceList;
 use App\Domain\Pricing\Models\TaxRule;
 use App\Domain\Purchasing\Models\GoodsReceipt;
 use App\Domain\Purchasing\Models\PurchaseOrder;
+use App\Domain\Sales\Models\CashShift;
+use App\Domain\Sales\Models\Sale;
 use App\Domain\Suppliers\Models\Supplier;
 use App\Models\User;
 use App\Policies\BranchPolicy;
+use App\Policies\CashShiftPolicy;
 use App\Policies\GoodsReceiptPolicy;
 use App\Policies\PriceListPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\PurchaseInvoicePolicy;
 use App\Policies\PurchaseOrderPolicy;
 use App\Policies\RegisterPolicy;
+use App\Policies\SalePolicy;
 use App\Policies\ShelfLocationPolicy;
 use App\Policies\StockAdjustmentPolicy;
 use App\Policies\SupplierPolicy;
@@ -67,5 +71,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PurchaseOrder::class, PurchaseOrderPolicy::class);
         Gate::policy(GoodsReceipt::class, GoodsReceiptPolicy::class);
         Gate::policy(PurchaseInvoice::class, PurchaseInvoicePolicy::class);
+        Gate::policy(CashShift::class, CashShiftPolicy::class);
+        Gate::policy(Sale::class, SalePolicy::class);
     }
 }
